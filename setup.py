@@ -20,7 +20,7 @@ history = open('CHANGELOG.rst').read().replace('.. :changelog:', '')
 
 setup(name='django-modal-forms',
       version=version,
-      description='Helper class to integrate Django with datatables',
+      description='A Django helper app to add editing capabilities to the frontend using modal forms',
       long_description=readme + '\n\n' + history,
       url='http://github.com/morlandi/django-modal-forms',
       author='Mario Orlandi',
