@@ -1,0 +1,60 @@
+{% load static %}
+
+{# "How To Create a Modal Box":; #}
+{# https://www.w3schools.com/howto/howto_css_modals.asp #}
+
+<div id="dialog_generic" class="dialog draggable">
+    <div class="dialog-dialog">
+        <div class="dialog-content">
+            <div class="dialog-header loading">
+                <span class="spinner">
+                    <i class="fa fa-spinner fa-spin"></i>
+                </span>
+                <span class="btn-close">&times;</span>
+                <div class="title">Title</div>
+            </div>
+            <div class="dialog-body">
+                <p>Some text in the dialog ...</p>
+            </div>
+            <div class="dialog-footer">
+                <input type="submit" value="Close" class="btn btn-close" />
+                <input type="submit" value="Save" class="btn btn-save" />
+                <div class="text">footer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+{% comment %}
+<div class="modal draggable" id="modal_generic" tabindex="-1" role="dialog" aria-hidden="false">
+    <div class="dialog-dialog">
+        <div class="dialog-content NO-animated NO-bounceInRight">
+            <div class="dialog-header">
+                <span class="spinner">
+                    <i class="fa fa-spinner fa-spin"></i>
+                </span>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Chiudi</span>
+                </button>
+                <div class="title-wrapper">
+                    <i class="fa fa-laptop dialog-icon"></i>
+                    <span class="dialog-title">title goes here</span>
+                </div>
+                <small class="dialog-subtitle font-bold">subtitle goes here</small>
+            </div>
+            <div class="dialog-body">
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">Chiudi</button>
+                <button type="button" class="btn btn-primary btn-save">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endcomment %}
