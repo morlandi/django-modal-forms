@@ -80,6 +80,10 @@ class Dialog {
     get modal_name() { return this._name; }
     get options() { return this._options; }
 
+    /**
+     * Close (hide) the dialog
+     */
+
     close() {
         var self = this;
 
@@ -119,6 +123,10 @@ class Dialog {
         self.notify('initialized');
     }
 
+    /**
+     * Show the dialog
+     */
+
     show() {
         var self = this;
         self.modal.show();
@@ -152,7 +160,19 @@ class Dialog {
         return promise;
     }
 
-    open(event, show=true) {
+    /**
+     * Open the dialog
+     *
+     * 1. dialog body will be immediately loaded with static content "options.html"
+     * 2. then the dialog is shown (unless the "show" parameter is false)
+     * 3. finally, dynamic content will be loaded from remote address "options.url" (if supplied)
+     *
+     * @param {callback} cbAfterLoad - (optional) called after dynamic content has been loaded as follows: cbAfterLoad(dialog, user_data)
+     * @param {object} user_data - (optional) blindly passed to cbAfterLoad() callback for whatever caller's need
+     * @param {boolean} show - if false, the dialog will be loaded but not shown
+     */
+
+    open(cbAfterLoad=null, user_data=null, show=true) {
 
         var self = this;
         self.initialize();
@@ -190,7 +210,7 @@ class Dialog {
         // Load remote content
         if (self.options.url) {
             self.load().done(function(data, textStatus, jqXHR) {
-                console.log('after loaded ...');
+                if (cbAfterLoad) { cbAfterLoad(self, user_data); }
             });
         }
     }
