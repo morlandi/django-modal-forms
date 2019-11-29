@@ -30,7 +30,8 @@ class Dialog {
 
         // Default options
         self._options = {
-            action: '',
+            html: '',
+            url: '',
             width: '600px',
             height: '400px',
             max_width: null,
@@ -47,18 +48,7 @@ class Dialog {
             Object.assign(self._options, options);
         }
 
-        self.trace('"' + self.modal_name + '" constructed');
-        self.notify("created");
-    }
-
-    /**
-     * Debugging
-     */
-
-    trace(message) {
-        if (this.options.enable_trace) {
-            console.log('[Dialog] ' + message);
-        }
+        self.notify("created", [self.modal_name, self.options.width, self.options.height]);
     }
 
     /**
@@ -76,6 +66,9 @@ class Dialog {
      */
 
     notify(event_name, event_info=[]) {
+        if (this.options.enable_trace) {
+            console.log('[Dialog] ' + event_name + ' ' + event_info.join());
+        }
         this.modal.trigger(event_name + ".dialog", event_info);
     }
 
@@ -97,6 +90,8 @@ class Dialog {
         // Restore normal page scrolling in case the recently opened modal
         // had disable it to scroll it's own contents instead
         $('body').css('overflow', 'auto');
+
+        self.notify('closed');
     }
 
     initialize() {
@@ -120,29 +115,38 @@ class Dialog {
         footer.find('.btn-save').val(self.options.button_save_label);
         footer.find('.btn-close').val(self.options.button_close_label);
         footer.find('.text').html('&nbsp;' + self.options.footer_text);
+
+        self.notify('initialized');
+    }
+
+    show() {
+        var self = this;
+        self.modal.show();
+        self.notify('shown');
     }
 
     load() {
 
         var self = this;
+        var header = self.modal.find('.dialog-header');
 
-        console.log('loading "%o" ...', self.action);
+        self.notify('loading', [self.options.url]);
+        header.addClass('loading');
         var promise = $.ajax({
             type: 'GET',
-            url: self.options.action
+            url: self.options.url,
+            cache: false,
+            crossDomain: true
         }).done(function(data, textStatus, jqXHR) {
             self.modal.find('.dialog-body').html(data);
+            self.notify('loaded', [self.options.url]);
             // modal.modal('show');
             // formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
-
-            console.log('show');
-
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log('jqXHR: %o', jqXHR);
-            console.log('textStatus: %o', textStatus);
-            console.log('errorThrown: %o', errorThrown);
-            //alert('SERVER ERROR: ' + errorThrown);
+            console.log('ERROR: errorThrown=%o, textStatus=%o, jqXHR=%o', errorThrown, textStatus, jqXHR);
             ModalForms.display_server_error(errorThrown);
+        }).always(function() {
+            header.removeClass('loading');
         });
 
         return promise;
@@ -175,16 +179,24 @@ class Dialog {
         }
 
         // Load modal content
-        self.modal.find('.dialog-body').html('xxx');
-        self.load().done(function(data, textStatus, jqXHR) {
-            console.log('after save');
-        });
+        self.modal.find('.dialog-body').html(self.options.html);
+        self.notify('open');
 
-        // Show the modal
         if (show) {
-            self.modal.show();
-            self.trace('"' + self.modal_name + '" shown');
+            self.show();
         }
+
+        // Load modal content
+        if (self.options.url) {
+            self.load().done(function(data, textStatus, jqXHR) {
+                if (show) {
+                    self.modal.show();
+                }
+            });
+        }
+        else {
+        }
+
     }
 
 }
