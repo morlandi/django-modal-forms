@@ -144,7 +144,11 @@ class Dialog {
             type: 'GET',
             url: self.options.url,
             cache: false,
-            crossDomain: true
+            crossDomain: true,
+            headers: {
+                // make sure request.is_ajax() return True on the server
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         }).done(function(data, textStatus, jqXHR) {
             self.modal.find('.dialog-body').html(data);
             self.notify('loaded', [self.options.url]);
