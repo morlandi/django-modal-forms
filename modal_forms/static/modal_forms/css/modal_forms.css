@@ -58,15 +58,17 @@
 
 .dialog .dialog-header .spinner {
     float: left;
-    padding: 10px 0 0 10px;
-    margin: 0;
-    font-size: 40px;
-    color: #666;
-    visibility: hidden;
+    padding: 0;
+    margin: -8px 8px 0 0;
+    font-size: 26px;
+    color: yellow;
+    /*visibility: hidden;*/
+    display: none;
 }
 
 .dialog .dialog-header.loading .spinner {
-    visibility: visible;
+    /*visibility: visible;*/
+    display: block;
 }
 
 .dialog .dialog-content .dialog-footer {

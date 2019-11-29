@@ -7,17 +7,20 @@ class Dialog {
     /**
      * Constructor
      *
-     * @param {HTMLElement} element - HTMLElement (normally a <div>) to be used as canvas container
-     * @param {string[]} labels - the list of labels (X-axis, then all Y-axis)
-     * @param {integer} max_points - if > 0, chart keeps only the most recently received data
-     * @param {object} extra_options - a dictionary of extra options
+     * @param {HTMLElement} element - the dialog box (defaults to "#dialog_generic")
+     * @param {object} options - check "this._options" defaults for a full list of available options
      */
 
-    constructor(element, options) {
+    constructor(element=null, options={}) {
 
         self = this;
 
         // Check and save "element"
+        if (element == null) {
+            element = '#dialog_generic';
+        }
+
+        self._name = element;
         self._element = $(element);
         if (self._element.length <= 0) {
             var message = 'ERROR: dialog "' + element + '" not found';
@@ -25,23 +28,27 @@ class Dialog {
             ModalForms.display_server_error(message);
         }
 
-        // Setup options
-        this._options = {
+        // Default options
+        self._options = {
+            action: '',
             width: '600px',
             height: '400px',
             max_width: null,
             max_height: null,
             button_save_label: 'Save',
             button_close_label: 'Cancel',
-            title: 'Dialog title',
-            footer_text: 'Footer',
+            title: '',
+            footer_text: '',
             enable_trace: false
         };
+
+        // Override with user-supplied custom options
         if (options) {
-            Object.assign(this._options, options);
+            Object.assign(self._options, options);
         }
 
-        this.notify("created");
+        self.trace('"' + self.modal_name + '" constructed');
+        self.notify("created");
     }
 
     /**
@@ -55,35 +62,33 @@ class Dialog {
     }
 
     /**
-     * Getters and setters
-     */
-
-    get modal() { return this._element; }
-    get options() { return this._options; }
-
-    /**
-     * Fire a custom "chart" event.
+     * Fire a custom "Dialog" event.
      *
      * Sample usage in this class:
-     *    this.notify("feed-completed", ['foo', 'bar']);
+     *    this.notify("created", ['foo', 'bar']);
      *
      * Sample usage client-side:
      *
-     *  chart.element.on('feed-completed.real-time-chart', onFeedCompleted);
-     *
-     *  function onFeedCompleted(event, arg1, arg2) {
+     *  $('#dialog_generic').on('created.dialog', function(event, arg1, arg2) {
      *      var target = $(event.target);
-     *      console.log('onFeedCompleted(), taget=%o arg1=%o, arg2=%o', target, arg1, arg2);
-     *  }
-     *
+     *      console.log('Dialog created: target=%o, arg1=%o, arg2=%o', target, arg1, arg2);
+     *  });
      */
 
     notify(event_name, event_info=[]) {
         this.modal.trigger(event_name + ".dialog", event_info);
     }
 
+    /**
+     * Getters and setters
+     */
+
+    get modal() { return this._element; }
+    get modal_name() { return this._name; }
+    get options() { return this._options; }
+
     close() {
-        self = this;
+        var self = this;
 
         self.modal.find('.close').off();
         //$(window).off();
@@ -95,7 +100,7 @@ class Dialog {
     }
 
     initialize() {
-        self = this;
+        var self = this;
 
         var content = self.modal.find('.dialog-content');
         var header = content.find('.dialog-header');
@@ -117,20 +122,39 @@ class Dialog {
         footer.find('.text').html('&nbsp;' + self.options.footer_text);
     }
 
+    load() {
+
+        var self = this;
+
+        console.log('loading "%o" ...', self.action);
+        var promise = $.ajax({
+            type: 'GET',
+            url: self.options.action
+        }).done(function(data, textStatus, jqXHR) {
+            self.modal.find('.dialog-body').html(data);
+            // modal.modal('show');
+            // formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
+
+            console.log('show');
+
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log('jqXHR: %o', jqXHR);
+            console.log('textStatus: %o', textStatus);
+            console.log('errorThrown: %o', errorThrown);
+            //alert('SERVER ERROR: ' + errorThrown);
+            ModalForms.display_server_error(errorThrown);
+        });
+
+        return promise;
+    }
+
     open(event, show=true) {
 
-        self = this;
-
-        // // If "modal" is a selector, initialize a modal object,
-        // // otherwise just use it
-        // if ($.type(modal) == 'string') {
-        //     modal = initModalDialog(event, modal);
-        // }
-
+        var self = this;
         self.initialize();
 
-        // When the user clicks on <span> (x), close the modal
-        this.modal.find('.btn-close').off().on('click', function() {
+        // When the user clicks on any '.btn-close' element, close the modal
+        self.modal.find('.btn-close').off().on('click', function() {
             self.close();
         });
 
@@ -144,25 +168,22 @@ class Dialog {
         });
         */
 
-        // Close botton in the footer, if any
-        /*
-        var btn_close = self.modal.find('.dialog-footer .btn-close');
-        if (btn_close.length) {
-            btn_close.off().on('click', function(event) {
-                self.close();
-            });
-        }
-        */
-
         if (self.modal.hasClass('draggable')) {
             self.modal.find('.dialog-content').draggable({
                 handle: '.dialog-header'
             });
         }
 
+        // Load modal content
+        self.modal.find('.dialog-body').html('xxx');
+        self.load().done(function(data, textStatus, jqXHR) {
+            console.log('after save');
+        });
+
         // Show the modal
         if (show) {
-            this._element.show();
+            self.modal.show();
+            self.trace('"' + self.modal_name + '" shown');
         }
     }
 
