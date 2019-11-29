@@ -43,7 +43,9 @@ In your base templates, add:
 
 .. code:: html
 
-    <script src="{% static 'modal_forms/js/modals.js' %}"></script>
+    <link rel='stylesheet' href="{% static 'modal_forms/css/modal_forms.css' %}">
+
+    <script src="{% static 'modal_forms/js/modal_forms.jsx' %}" type="text/jsx"></script>
 
     <script language="javascript">
         {% include 'modal_forms/init.js' %}
@@ -55,3 +57,40 @@ specific settings.
 
 One day I might find a simpler solution for this need, possibly without including
 extra dependencies to the app.
+
+Sample usage in a template:
+
+.. code:: html
+
+    <script language="javascript">
+
+        $(document).ready(function() {
+
+            $('#dialog_generic').on('created.dialog', function(event, arg1, arg2) {
+                var target = $(event.target);
+                console.log('Dialog created: target=%o, arg1=%o, arg2=%o', target, arg1, arg2);
+            });
+
+            dialog1 = new Dialog('#dialog_generic', {
+                html: '<h1>hello</h1>',
+                url: "{% url 'frontend:j_object' %}",
+                width: '80%',
+                // height: '400px',
+                // max_width: null,
+                // max_height: null,
+                button_save_label: 'Salva',
+                button_close_label: 'Annulla',
+                title: '<i class="fa fa-calculator"></i> Selezione Oggetto',
+                footer_text: '',
+                enable_trace: true
+            });
+
+        });
+
+    </script>
+
+
+    <a href="#" class="btn btn-primary pull-right" onclick="dialog1.open(); return false;">
+        <i class="fa fa-plus-circle"></i>
+        Test Popup
+    </a>

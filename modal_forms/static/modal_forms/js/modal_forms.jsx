@@ -178,25 +178,21 @@ class Dialog {
             });
         }
 
-        // Load modal content
+        // Load static content
         self.modal.find('.dialog-body').html(self.options.html);
         self.notify('open');
 
+        // Show the dialog
         if (show) {
             self.show();
         }
 
-        // Load modal content
+        // Load remote content
         if (self.options.url) {
             self.load().done(function(data, textStatus, jqXHR) {
-                if (show) {
-                    self.modal.show();
-                }
+                console.log('after loaded ...');
             });
         }
-        else {
-        }
-
     }
 
 }
