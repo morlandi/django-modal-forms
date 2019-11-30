@@ -220,13 +220,127 @@ class Dialog {
         // Load remote content
         if (self.options.url) {
             self._load().done(function(data, textStatus, jqXHR) {
-                //if (cbAfterLoad) { cbAfterLoad(self, user_data); }
+                var form = self.element.find('.dialog-content .dialog-body form');
+                if (form.length == 1) {
+                    self._form_ajax_submit();
+                }
             });
         }
     }
 
+    _form_ajax_submit() {
+        console.log('_form_ajax_submit');
+        var self = this;
+
+        var content = self.element.find('.dialog-content');
+        var header = content.find('.dialog-header');
+        var body = content.find('.dialog-body');
+        var footer = content.find('.dialog-footer');
+        var form = content.find('.dialog-body form');
+
+        // use footer save button, if available
+        var btn_save = footer.find('.btn-save');
+        if (btn_save) {
+            form.find('.form-submit-row').hide();
+            btn_save.off().on('click', function(event) {
+                form.submit();
+            });
+        }
+
+        // Give focus to first visible form field
+        form.find('input:visible').first().focus().select();
+
+        // bind to the form’s submit event
+        form.on('submit', function(event) {
+
+            // prevent the form from performing its default submit action
+            event.preventDefault();
+            header.addClass('loading');
+
+        });
+    }
+
+
+    formAjaxSubmit(caller_event, modal, action, cbAfterLoad, cbAfterSuccess) {
+        var form = modal.find('.modal-body form');
+        var header = $(modal).find('.modal-header');
+
+        // use footer save button, if available
+        var btn_save = modal.find('.modal-footer .btn-save');
+        if (btn_save) {
+            modal.find('.modal-body form .form-submit-row').hide();
+            btn_save.off().on('click', function(event) {
+                modal.find('.modal-body form').submit();
+            });
+        }
+        if (cbAfterLoad) { cbAfterLoad(caller_event, modal); }
+
+        // Give focus to first visible form field
+        modal.find('form input:visible').first().focus().select();
+
+        // bind to the form’s submit event
+        $(form).on('submit', function(event) {
+
+            // prevent the form from performing its default submit action
+            event.preventDefault();
+            header.addClass('loading');
+
+            var url = $(this).attr('action') || action;
+
+            // serialize the form’s content and send via an AJAX call
+            // using the form’s defined action and method
+            $.ajax({
+                type: $(this).attr('method'),
+                url: url,
+                data: $(this).serialize(),
+                success: function(xhr, ajaxOptions, thrownError) {
+
+                    // update the modal body with the new form
+                    $(modal).find('.modal-body').html(xhr);
+
+                    // If the server sends back a successful response,
+                    // we need to further check the HTML received
+
+                    // If xhr contains any field errors,
+                    // the form did not validate successfully,
+                    // so we keep it open for further editing
+                    //if ($(xhr).find('.has-error').length > 0) {
+                    if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
+                        formAjaxSubmit(caller_event, modal, url, cbAfterLoad, cbAfterSuccess);
+                    } else {
+                        // otherwise, we've done and can close the modal
+                        $(modal).modal('hide');
+                        if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
+                    }
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+                    console.log('SERVER ERROR: ' + thrownError);
+                },
+                complete: function() {
+                    header.removeClass('loading');
+                }
+            });
+        });
+    }
+
 }
 
+/*
+        $.ajax({
+            type: 'GET',
+            url: url
+        }).done(function(data, textStatus, jqXHR) {
+            modal.find('.modal-body').html(data);
+            modal.modal('show');
+            formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log('jqXHR: %o', jqXHR);
+            console.log('textStatus: %o', textStatus);
+            console.log('errorThrown: %o', errorThrown);
+            //alert('SERVER ERROR: ' + errorThrown);
+            display_server_error(errorThrown);
+        });
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
