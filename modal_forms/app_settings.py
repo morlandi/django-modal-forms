@@ -1,4 +1,5 @@
 from django.conf import settings
 
-USE_SWEETALERT2 = getattr(settings, 'MODAL_FORMS_USE_SWEETALERT2', False)
+FORM_LAYOUT_FLAVOR = getattr(settings, 'MODAL_FORMS_FORM_LAYOUT_FLAVOR', "bs4")
+
 
