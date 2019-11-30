@@ -442,7 +442,7 @@ window.ModalForms = (function() {
                 confirmButtonText: 'Chiudi'
             });
         }
-        // failing that, use a simple alert
+        // failing that, we fallback to a simple alert
         catch (err) {
             alert(errorDetails);
         }

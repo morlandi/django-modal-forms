@@ -186,3 +186,14 @@ Settings
 MODAL_FORMS_FORM_LAYOUT_FLAVOR
     Default: "bs4"
 
+
+Utilities
+---------
+
+ModalForms.display_server_error(errorDetails)
+
+    Report the error to the user
+
+    First, we try to use SweetAlert2 if available.
+
+    Failing that, we fallback to a simple alert box.
