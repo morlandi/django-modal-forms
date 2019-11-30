@@ -27,20 +27,8 @@ In your settings, add:
         'modal_forms',
     ]
 
-    ...
 
-    TEMPLATES = [
-        {
-            'OPTIONS': {
-                'context_processors': [
-                    'modal_forms.context_processors.modal_forms_settings',
-                ],
-            },
-        },
-    ]
-
-
-In your base templates, add:
+In your base template, add:
 
 .. code:: html
 
@@ -48,22 +36,14 @@ In your base templates, add:
 
     <script src="{% static 'modal_forms/js/modal_forms.jsx' %}" type="text/jsx"></script>
 
-    <script language="javascript">
-        {% include 'modal_forms/init.js' %}
-    </script>
-
-The last inclusion has the purpose to share some Django settings with Javascript
-by calling ModalForms.init() and passing by the list of all `django-modal-forms`
-specific settings.
-
-One day I might find a simpler solution for this need, possibly without including
-extra dependencies to the app.
-
 
 Basic Usage
 -----------
 
-Sample usage in a template:
+In the following example, we build a Dialog() object providing some custom options;
+then, we use it to open a modal dialog and load it from the specified url.
+
+For demonstration purposes, we also subscribe the 'created.dialog' notification.
 
 .. code:: html
 
@@ -73,9 +53,9 @@ Sample usage in a template:
 
             // Only for demonstration purposes, register to receive "created.dialog" notification;
             // this is fully optional
-            $('#dialog_generic').on('created.dialog', function(event, arg1, arg2) {
+            $('#dialog_generic').on('created.dialog', function(event, dialog, options) {
                 var target = $(event.target);
-                console.log('Dialog created: target=%o, arg1=%o, arg2=%o', target, arg1, arg2);
+                console.log('Dialog created: event=%o (with target=%o), dialog=%o, options=%o', event, target, dialog, options);
             });
 
             // Build a Dialog object supplying custom parameters as needed
@@ -104,14 +84,15 @@ Sample usage in a template:
     </a>
 
 
-Open the Dialog with a custom "After load" callback
----------------------------------------------------
+Open the Dialog and perform some actions after content has been loaded
+----------------------------------------------------------------------
 
 In the following example:
 
+- we subscribe the 'loaded.dialog' event
 - we call open() with show=false, so the Dialog will remain hidden during loading
-- after loading is completed, our callback onPopupLoaded is called
-- in onPopupLoaded(dialog, event), we show the dialog, and hide it after a 2 seconds timeout
+- after loading is completed, our handle is called
+- in this handle, we show the dialog and hide it after a 3 seconds timeout
 
 Sample usage in a template:
 
@@ -119,22 +100,22 @@ Sample usage in a template:
 
     <script language="javascript">
         $(document).ready(function() {
+
             dialog1 = new Dialog('#dialog_generic', {
                 url: "{% url 'frontend:j_object' %}"
             });
+
+            dialog1.element.on('loaded.dialog', function(event, dialog, url) {
+                dialog.show();
+                setTimeout(function() {
+                    dialog.close();
+                }, 3000);
+            });
         });
 
-        function onPopupLoaded(dialog, event) {
-            console.log('onPopupLoaded(dialog: %o, event: %o;', dialog, event);
-            dialog.show();
-            setTimeout(function() {
-                dialog.close();
-            }, 3000);
-        }
     </script>
 
-
-    <a href="#" onclick="dialog1.open(cbAfterLoad=onPopupLoaded, user_data=event, show=false); return false;">
+    <a href="#" onclick="dialog1.open(show=false); return false;">
         <i class="fa fa-plus-circle"></i>
         Test Popup (2)
     </a> /
@@ -143,53 +124,65 @@ Sample usage in a template:
 Dialog class public methods
 ---------------------------
 
-    /**
-     * Constructor
-     *
-     * @param {HTMLElement} element - the dialog box (defaults to "#dialog_generic")
-     * @param {object} options - check "this._options" defaults for a full list of available options
-     */
-
-    constructor(element=null, options={})
+TODO: extract doc from js source ...
 
 
-    /**
-     * Close (hide) the dialog
-     */
+constructor(element=null, options={})
+    ...
 
-    close()
+close()
+    ...
 
+show()
+    ...
 
-    /**
-     * Show the dialog
-     */
-
-    show()
-
-
-    /**
-     * Open the dialog
-     *
-     * 1. dialog body will be immediately loaded with static content "options.html"
-     * 2. then the dialog is shown (unless the "show" parameter is false)
-     * 3. finally, dynamic content will be loaded from remote address "options.url" (if supplied)
-     *
-     * @param {callback} cbAfterLoad - (optional) called after dynamic content has been loaded as follows: cbAfterLoad(dialog, user_data)
-     * @param {object} user_data - (optional) blindly passed to cbAfterLoad() callback for whatever caller's need
-     * @param {boolean} show - if false, the dialog will be loaded but not shown
-     */
-
-    open(cbAfterLoad=null, user_data=null, show=true)
+open(show=true)
+    ...
 
 
 Notifications
 -------------
 
-Sample usage client-side:
+Sample usages client-side:
 
 .. code:: javascript
 
-    $('#dialog_generic').on('created.dialog', function(event, arg1, arg2) {
+    $('#dialog_generic').on('created.dialog', function(event, dialog, options) {
         var target = $(event.target);
-        console.log('Dialog created: target=%o, arg1=%o, arg2=%o', target, arg1, arg2);
+        console.log('Dialog created: event=%o (with target=%o), dialog=%o, options=%o', event, target, dialog, options);
     });
+
+or
+
+.. code:: javascript
+
+
+    dialog1.element.on('loaded.dialog', function(event, dialog, url) {
+        var target = $(event.target);
+        console.log('Dialog loaded: event=%o (with target=%o), dialog=%o, url=%o', event, target, dialog, url);
+        dialog.show();
+        setTimeout(function() {
+            dialog.close();
+        }, 3000);
+    });
+
+Supplied events:
+
+============================  ================================
+events                        parameters
+============================  ================================
+created.dialog                event, dialog, options
+closed.dialog                 event, dialog
+initializeds.dialog           event, dialog
+shown.dialog                  event, dialog
+loading.dialog                event, dialog, url
+loaded.dialog                 event, dialog, url
+open.dialog                   event, dialog
+============================  ================================
+
+Settings
+--------
+
+MODAL_FORMS_FORM_LAYOUT_FLAVOR
+    Default: "bs4"
+

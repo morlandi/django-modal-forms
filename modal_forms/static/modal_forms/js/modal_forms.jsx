@@ -7,7 +7,7 @@ class Dialog {
     /**
      * Constructor
      *
-     * @param {HTMLElement} element - the dialog box (defaults to "#dialog_generic")
+     * @param {HTMLElement} element - the dialog box (if null, "#dialog_generic" is used as default)
      * @param {object} options - check "this._options" defaults for a full list of available options
      */
 
@@ -48,14 +48,14 @@ class Dialog {
             Object.assign(self._options, options);
         }
 
-        self.notify("created", [self.modal_name, self.options.width, self.options.height]);
+        self._notify("created", [self._options]);
     }
 
     /**
      * Fire a custom "Dialog" event.
      *
      * Sample usage in this class:
-     *    this.notify("created", ['foo', 'bar']);
+     *    this._notify("created", ['foo', 'bar']);
      *
      * Sample usage client-side:
      *
@@ -65,18 +65,19 @@ class Dialog {
      *  });
      */
 
-    notify(event_name, event_info=[]) {
-        if (this.options.enable_trace) {
+    _notify(event_name, event_info=[]) {
+        var self = this;
+        if (self.options.enable_trace) {
             console.log('[Dialog] ' + event_name + ' ' + event_info.join());
         }
-        this.modal.trigger(event_name + ".dialog", event_info);
+        self.element.trigger(event_name + ".dialog", [self].concat(event_info));
     }
 
     /**
      * Getters and setters
      */
 
-    get modal() { return this._element; }
+    get element() { return this._element; }
     get modal_name() { return this._name; }
     get options() { return this._options; }
 
@@ -87,21 +88,21 @@ class Dialog {
     close() {
         var self = this;
 
-        self.modal.find('.close').off();
+        self.element.find('.close').off();
         //$(window).off();
-        self.modal.hide();
+        self.element.hide();
 
         // Restore normal page scrolling in case the recently opened modal
         // had disable it to scroll it's own contents instead
         $('body').css('overflow', 'auto');
 
-        self.notify('closed');
+        self._notify('closed');
     }
 
-    initialize() {
+    _initialize() {
         var self = this;
 
-        var content = self.modal.find('.dialog-content');
+        var content = self.element.find('.dialog-content');
         var header = content.find('.dialog-header');
         var body = content.find('.dialog-body');
         var footer = content.find('.dialog-footer');
@@ -120,7 +121,7 @@ class Dialog {
         footer.find('.btn-close').val(self.options.button_close_label);
         footer.find('.text').html('&nbsp;' + self.options.footer_text);
 
-        self.notify('initialized');
+        self._notify('initialized');
     }
 
     /**
@@ -129,16 +130,16 @@ class Dialog {
 
     show() {
         var self = this;
-        self.modal.show();
-        self.notify('shown');
+        self.element.show();
+        self._notify('shown');
     }
 
-    load() {
+    _load() {
 
         var self = this;
-        var header = self.modal.find('.dialog-header');
+        var header = self.element.find('.dialog-header');
 
-        self.notify('loading', [self.options.url]);
+        self._notify('loading', [self.options.url]);
         header.addClass('loading');
         var promise = $.ajax({
             type: 'GET',
@@ -150,8 +151,8 @@ class Dialog {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         }).done(function(data, textStatus, jqXHR) {
-            self.modal.find('.dialog-body').html(data);
-            self.notify('loaded', [self.options.url]);
+            self.element.find('.dialog-body').html(data);
+            self._notify('loaded', [self.options.url]);
             // modal.modal('show');
             // formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
         }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -170,41 +171,46 @@ class Dialog {
      * 1. dialog body will be immediately loaded with static content "options.html"
      * 2. then the dialog is shown (unless the "show" parameter is false)
      * 3. finally, dynamic content will be loaded from remote address "options.url" (if supplied)
-     *
-     * @param {callback} cbAfterLoad - (optional) called after dynamic content has been loaded as follows: cbAfterLoad(dialog, user_data)
-     * @param {object} user_data - (optional) blindly passed to cbAfterLoad() callback for whatever caller's need
-     * @param {boolean} show - if false, the dialog will be loaded but not shown
+     * 4. if successfull, a 'loaded.dialog' event is fired; you can use it to perform any action required after loading
      */
 
-    open(cbAfterLoad=null, user_data=null, show=true) {
+    open(show=true) {
 
         var self = this;
-        self.initialize();
+        self._initialize();
 
         // When the user clicks on any '.btn-close' element, close the modal
-        self.modal.find('.btn-close').off().on('click', function() {
+        self.element.find('.dialog-header .close').off().on('click', function() {
             self.close();
         });
+
+        // Close botton in the footer, if any
+        var btn_close = self.element.find('.dialog-footer .btn-close');
+        if (btn_close.length) {
+            btn_close.off().on('click', function(event) {
+                self.close();
+            });
+        }
 
         /*
         // When the user clicks anywhere outside of the modal, close it
         $(window).off().on('click', function(event) {
             //if (event.target.id == modal.attr('id')) {
-            if (event.target == self.modal.get(0)) {
+            if (event.target == self.element.get(0)) {
                 self.close();
             }
         });
         */
 
-        if (self.modal.hasClass('draggable')) {
-            self.modal.find('.dialog-content').draggable({
+        if (self.element.hasClass('draggable')) {
+            self.element.find('.dialog-content').draggable({
                 handle: '.dialog-header'
             });
         }
 
         // Load static content
-        self.modal.find('.dialog-body').html(self.options.html);
-        self.notify('open');
+        self.element.find('.dialog-body').html(self.options.html);
+        self._notify('open');
 
         // Show the dialog
         if (show) {
@@ -213,8 +219,8 @@ class Dialog {
 
         // Load remote content
         if (self.options.url) {
-            self.load().done(function(data, textStatus, jqXHR) {
-                if (cbAfterLoad) { cbAfterLoad(self, user_data); }
+            self._load().done(function(data, textStatus, jqXHR) {
+                //if (cbAfterLoad) { cbAfterLoad(self, user_data); }
             });
         }
     }
@@ -226,19 +232,6 @@ class Dialog {
 // Helpers
 
 window.ModalForms = (function() {
-
-    var _options = {};
-
-    function init(options) {
-        _options = options;
-    }
-
-    function get_option(key) {
-        if (_options.hasOwnProperty(key)) {
-            return _options[key];
-        }
-        console.log('ERROR: "' + key + '" not found in ModalForms._options. Did you forget to call ModalForms.init() ???' )
-    }
 
     function initModalDialog(event, modal_element) {
         /*
@@ -435,7 +428,8 @@ window.ModalForms = (function() {
 
     function display_server_error(errorDetails) {
 
-        if (get_option('use_sweetalert2')) {
+        // Try with SweetAlert2
+        try {
             swal.fire({
                 confirmButtonClass: 'btn btn-lg btn-primary',
                 cancelButtonClass: 'btn btn-lg btn-default',
@@ -448,13 +442,13 @@ window.ModalForms = (function() {
                 confirmButtonText: 'Chiudi'
             });
         }
-        else {
+        // failing that, use a simple alert
+        catch (err) {
             alert(errorDetails);
         }
     }
 
     return {
-        init: init,
         //openModalDialog: openModalDialog,
         openModalDialogWithForm: openModalDialogWithForm,
         display_server_error: display_server_error
