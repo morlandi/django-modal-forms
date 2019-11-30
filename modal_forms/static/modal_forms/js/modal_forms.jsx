@@ -153,8 +153,6 @@ class Dialog {
         }).done(function(data, textStatus, jqXHR) {
             self.element.find('.dialog-body').html(data);
             self._notify('loaded', [self.options.url]);
-            // modal.modal('show');
-            // formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.log('ERROR: errorThrown=%o, textStatus=%o, jqXHR=%o', errorThrown, textStatus, jqXHR);
             ModalForms.display_server_error(errorThrown);
@@ -222,6 +220,7 @@ class Dialog {
             self._load().done(function(data, textStatus, jqXHR) {
                 var form = self.element.find('.dialog-content .dialog-body form');
                 if (form.length == 1) {
+                    // Manage form
                     self._form_ajax_submit();
                 }
             });
@@ -257,6 +256,44 @@ class Dialog {
             event.preventDefault();
             header.addClass('loading');
 
+            // serialize the form’s content and send via an AJAX call
+            // using the form’s defined method and action
+            var url = form.attr('action') || self.options.url;
+            var method = form.attr('method') || 'post';
+            $.ajax({
+                type: method,
+                url: url,
+                data: $(this).serialize(),
+                success: function(xhr, ajaxOptions, thrownError) {
+
+                    // update the modal body with the new form
+                    $(modal).find('.modal-body').html(xhr);
+
+                    /*
+                    // If the server sends back a successful response,
+                    // we need to further check the HTML received
+
+                    // If xhr contains any field errors,
+                    // the form did not validate successfully,
+                    // so we keep it open for further editing
+                    //if ($(xhr).find('.has-error').length > 0) {
+                    if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
+                        formAjaxSubmit(caller_event, modal, url, cbAfterLoad, cbAfterSuccess);
+                    } else {
+                        // otherwise, we've done and can close the modal
+                        $(modal).modal('hide');
+                        if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
+                    }
+                    */
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+                    console.log('SERVER ERROR: ' + thrownError);
+                },
+                complete: function() {
+                    header.removeClass('loading');
+                }
+            });
+            */
         });
     }
 
