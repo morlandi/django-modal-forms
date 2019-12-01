@@ -32,15 +32,18 @@ class Dialog {
         self._options = {
             html: '',
             url: '',
-            width: '600px',
-            height: '400px',
+            width: null,
+            min_width: null,
             max_width: null,
+            height: null,
+            min_height: null,
             max_height: null,
             button_save_label: 'Save',
             button_close_label: 'Cancel',
             title: '',
             footer_text: '',
-            enable_trace: false
+            enable_trace: false,
+            callback: null
         };
 
         // Override with user-supplied custom options
@@ -67,10 +70,15 @@ class Dialog {
 
     _notify(event_name, event_info=[]) {
         var self = this;
+        debugger
         if (self.options.enable_trace) {
-            console.log('[Dialog] ' + event_name + ' ' + event_info.join());
+            console.log('[Dialog] ' + event_name + ' %o', event_info);
         }
         self.element.trigger(event_name + ".dialog", [self].concat(event_info));
+
+        if (self.options.callback) {
+            self.options.callback(event_name + ".dialog", self, event_info);
+        }
     }
 
     /**
@@ -107,14 +115,12 @@ class Dialog {
         var body = content.find('.dialog-body');
         var footer = content.find('.dialog-footer');
 
-        content.css('width', self.options.width);
-        if (self.options.max_width) {
-            content.css('max-width', self.options.max_width);
-        }
-        body.css('height', self.options.height);
-        if (self.options.max_height) {
-            body.css('max-height', self.options.max_height);
-        }
+        if (self.options.width) { content.css('width', self.options.width); }
+        if (self.options.min_width) { content.css('min-width', self.options.min_width); }
+        if (self.options.max_width) { content.css('max-width', self.options.max_width); }
+        if (self.options.height) { body.css('height', self.options.height); }
+        if (self.options.min_height) { body.css('min-height', self.options.min_height); }
+        if (self.options.max_height) { body.css('max-height', self.options.max_height); }
 
         header.find('.title').html('&nbsp;' + self.options.title);
         footer.find('.btn-save').val(self.options.button_save_label);
@@ -228,7 +234,6 @@ class Dialog {
     }
 
     _form_ajax_submit() {
-        console.log('_form_ajax_submit');
         var self = this;
 
         var content = self.element.find('.dialog-content');
@@ -260,6 +265,47 @@ class Dialog {
             // using the form’s defined method and action
             var url = form.attr('action') || self.options.url;
             var method = form.attr('method') || 'post';
+            var data = form.serialize();
+
+            self._notify('submitting', [method, url, data]);
+            $.ajax({
+                type: method,
+                url: url,
+                data: data,
+                cache: false,
+                crossDomain: true,
+                headers: {
+                    // make sure request.is_ajax() return True on the server
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).done(function(xhr, textStatus, jqXHR) {
+
+                // update the modal body with the new form
+                body.html(xhr);
+
+                // If the server sends back a successful response,
+                // we need to further check the HTML received
+
+                // If xhr contains any field errors,
+                // the form did not validate successfully,
+                // so we keep it open for further editing
+                //if ($(xhr).find('.has-error').length > 0) {
+                if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
+                    self._form_ajax_submit();
+                } else {
+                    // otherwise, we've done and can close the modal
+                    self._notify('submitted', [method, url, data]);
+                    self.close();
+                }
+
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log('ERROR: errorThrown=%o, textStatus=%o, jqXHR=%o', errorThrown, textStatus, jqXHR);
+                ModalForms.display_server_error(errorThrown);
+            }).always(function() {
+                header.removeClass('loading');
+            });
+
+            /*
             $.ajax({
                 type: method,
                 url: url,
@@ -269,7 +315,6 @@ class Dialog {
                     // update the modal body with the new form
                     $(modal).find('.modal-body').html(xhr);
 
-                    /*
                     // If the server sends back a successful response,
                     // we need to further check the HTML received
 
@@ -284,7 +329,6 @@ class Dialog {
                         $(modal).modal('hide');
                         if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
                     }
-                    */
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
                     console.log('SERVER ERROR: ' + thrownError);
