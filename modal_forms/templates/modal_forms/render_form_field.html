@@ -1,0 +1,44 @@
+
+<div class="form-row {% if field.errors %}errors{% endif %} {{ field.html_name }}">
+    <div>
+        <div>
+            <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
+        </div>
+        <div>
+            {{ field }}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+                <ul class="errorlist">
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% comment %}
+<div class="form-row grp-row grp-cells-1 {% if field.errors %}grp-errors{% endif %} {{ field.html_name }}">
+    <div class="field-box l-2c-fluid l-d-4">
+        <div class="c-1">
+            <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
+        </div>
+        <div class="c-2">
+            {{ field }}
+            {% if field.help_text %}
+            <p class="grp-help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+                <ul class="errorlist">
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endcomment %}

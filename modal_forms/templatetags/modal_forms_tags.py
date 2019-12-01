@@ -208,3 +208,16 @@ class CheckPermNode(template.Node):
         return html
 
 ################################################################################
+# Form rendering helpers
+
+@register.inclusion_tag('modal_forms/render_form_field.html')
+def render_form_field(field):
+    return {
+        'field': field
+    }
+
+@register.inclusion_tag('modal_forms/render_form.html')
+def render_form(form):
+    return {
+        'form': form
+    }

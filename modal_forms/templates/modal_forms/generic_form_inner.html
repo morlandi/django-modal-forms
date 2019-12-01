@@ -1,33 +1,20 @@
-{% load i18n %}
+{% load i18n modal_forms_tags %}
 
-{% comment %}
-TODO:
-
-"How to Use Bootstrap 4 Forms With Django"
-https://simpleisbetterthancomplex.com/tutorial/2018/08/13/how-to-use-bootstrap-4-forms-with-django.html
-{% endcomment %}
-
+<style>
+.modal .grp-module {
+    border: none;
+    background-color: transparent;
+}
+</style>
 
 <div class="row">
-    <div class="col-sm-10">
-        <form method="post" class="form" novalidate autocomplete="off">
+    <div class="col-sm-4">
+        <form action="{{ action }}" method="post" class="form" autocomplete="off">
             {% csrf_token %}
-
-            {% comment %}
-            {% bootstrap_form form layout='horizontal' %}
-            <input type="hidden" name="object_id" value="{{ object.id|default:'' }}">
-            {% buttons %}
-                <div class="form-submit-row">
-                    <button type="submit" class="btn btn-primary">
-                        {% bootstrap_icon "star" %} {% trans 'Send' %}
-                    </button>
-                </div>
-            {% endbuttons %}
-            {% endcomment %}
-
-            {{ form }}
-            <button type="submit" class="btn btn-success">{% trans 'Send' %}</button>
-
+            {% render_form form %}
+            <div class="form-submit-row">
+                <input type="submit" value="Save" />
+            </div>
         </form>
     </div>
 </div>

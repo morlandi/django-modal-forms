@@ -220,3 +220,89 @@ Utilities (module ModalForms)
 - adjust_canvas_size(id)
 - getCookie(name)
 - confirmRemoteAction(url, options, afterDoneCallback, data=null)
+
+Form rendering helpers
+----------------------
+
+`generic_form_inner.html`:
+
+.. code:: html
+
+    {% load i18n modal_forms_tags %}
+
+    <style>
+    .modal .grp-module {
+        border: none;
+        background-color: transparent;
+    }
+    </style>
+
+    <div class="row">
+        <div class="col-sm-4">
+            <form action="{{ action }}" method="post" class="form" autocomplete="off">
+                {% csrf_token %}
+                {% render_form form %}
+                <div class="form-submit-row">
+                    <input type="submit" value="Save" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+Template tags:
+
+**render_form_field(field)** renders:
+
+.. code:: html
+
+    <div class="form-row {% if field.errors %}errors{% endif %} {{ field.html_name }}">
+        <div>
+            <div>
+                <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
+            </div>
+            <div>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+**render_form(form)** renders:
+
+.. code:: html
+
+    {% load modal_forms_tags %}
+
+    {% if form.non_field_errors %}
+        <ul class="errorlist">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% for hidden_field in form.hidden_fields %}
+        {% if hidden_field.errors %}
+            <ul class="errorlist">
+                {% for error in hidden_field.errors %}
+                    <li>(Hidden field {{ hidden_field.name }}) {{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {{ hidden_field }}
+    {% endfor %}
+
+    <fieldset class="module grp-module" style="Xwidth: 100%">
+        {% for field in form.visible_fields %}
+            {% render_form_field field %}
+        {% endfor %}
+    </fieldset>
