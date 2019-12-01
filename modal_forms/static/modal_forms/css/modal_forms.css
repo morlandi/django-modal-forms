@@ -108,7 +108,7 @@
 }
 
 /* The Close Button */
-.dialog .dialog-header .btn-close {
+.dialog .dialog-header .close {
     color: #fff;
     float: right;
     font-size: 20px;
@@ -116,13 +116,12 @@
     margin-top: -4px !important;
 }
 
-.dialog .dialog-header .btn-close:hover,
-.dialog .dialog-header .btn-close:focus {
+.dialog .dialog-header .close:hover,
+.dialog .dialog-header .close:focus {
     color: #ccc;
     text-decoration: none;
     cursor: pointer;
 }
-
 
 /*
  *  Sweetalert2 fix for bs3
