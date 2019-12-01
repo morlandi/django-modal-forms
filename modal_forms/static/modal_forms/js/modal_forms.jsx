@@ -27,6 +27,7 @@ class Dialog {
             min_height: null,
             max_height: null,
             button_save_label: 'Save',
+            !!! se null, nascondere il corrispondente bottone
             button_close_label: 'Cancel',
             title: '',
             footer_text: '',
