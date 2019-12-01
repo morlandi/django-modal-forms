@@ -36,6 +36,7 @@ In your base template, add:
 
     <script src="{% static 'modal_forms/js/modal_forms.jsx' %}" type="text/jsx"></script>
 
+    {% include 'modal_forms/modals.html' %}
 
 Basic Usage
 -----------
@@ -43,7 +44,7 @@ Basic Usage
 In the following example, we build a Dialog() object providing some custom options;
 then, we use it to open a modal dialog and load it from the specified url.
 
-For demonstration purposes, we also subscribe the 'created.dialog' notification.
+For demonstration purposes, we also subscribe the 'created' notification.
 
 .. code:: html
 
@@ -51,26 +52,21 @@ For demonstration purposes, we also subscribe the 'created.dialog' notification.
 
         $(document).ready(function() {
 
-            // Only for demonstration purposes, register to receive "created.dialog" notification;
-            // this is fully optional
-            $('#dialog_generic').on('created.dialog', function(event, dialog, options) {
-                var target = $(event.target);
-                console.log('Dialog created: event=%o (with target=%o), dialog=%o, options=%o', event, target, dialog, options);
-            });
-
-            // Build a Dialog object supplying custom parameters as needed
-            dialog1 = new Dialog('#dialog_generic', {
-                html: '<h1>hello</h1>',
-                url: "{% url 'frontend:j_object' %}",
-                width: '80%',
-                // height: '400px',
-                // max_width: null,
-                // max_height: null,
-                button_save_label: 'Salva',
-                button_close_label: 'Annulla',
+            dialog1 = new Dialog({
+                html: '<h1>Loading ...</h1>',
+                url: '{% url 'frontend:j_object' %}',
+                width: '400px',
+                min_height: '200px',
                 title: '<i class="fa fa-calculator"></i> Selezione Oggetto',
-                footer_text: '',
-                enable_trace: true
+                footer_text: 'testing dialog ...',
+                enable_trace: true,
+                callback: function(event_name, dialog, params) {
+                    switch (event_name) {
+                        case "created":
+                            console.log('Dialog created: dialog=%o, params=%o', dialog, params);
+                            break;
+                    }
+                }
             });
 
         });
@@ -89,7 +85,7 @@ Open the Dialog and perform some actions after content has been loaded
 
 In the following example:
 
-- we subscribe the 'loaded.dialog' event
+- we subscribe the 'loaded' event
 - we call open() with show=false, so the Dialog will remain hidden during loading
 - after loading is completed, our handle is called
 - in this handle, we show the dialog and hide it after a 3 seconds timeout
@@ -101,21 +97,30 @@ Sample usage in a template:
     <script language="javascript">
         $(document).ready(function() {
 
-            dialog1 = new Dialog('#dialog_generic', {
-                url: "{% url 'frontend:j_object' %}"
+            dialog2 = new Dialog({
+                url: "{% url 'frontend:j_object' %}",
+                width: '400px',
+                min_height: '200px',
+                enable_trace: true,
+                callback: dialog2_callback
             });
 
-            dialog1.element.on('loaded.dialog', function(event, dialog, url) {
-                dialog.show();
-                setTimeout(function() {
-                    dialog.close();
-                }, 3000);
-            });
         });
 
+        function dialog2_callback(event_name, dialog, params) {
+            switch (event_name) {
+                case "loaded":
+                    dialog.show();
+                    setTimeout(function() {
+                        dialog.close();
+                    }, 3000);
+                    break;
+            }
+        }
     </script>
 
-    <a href="#" onclick="dialog1.open(show=false); return false;">
+
+    <a href="#" onclick="dialog2.open(show=false); return false;">
         <i class="fa fa-plus-circle"></i>
         Test Popup (2)
     </a> /
@@ -169,15 +174,17 @@ or
 Supplied events:
 
 ============================  ================================
-events                        parameters
+event_name                    parameters
 ============================  ================================
-created.dialog                event, dialog, options
-closed.dialog                 event, dialog
-initializeds.dialog           event, dialog
-shown.dialog                  event, dialog
-loading.dialog                event, dialog, url
-loaded.dialog                 event, dialog, url
-open.dialog                   event, dialog
+created                       options
+closed
+initialized
+shown
+loading                       url
+loaded                        url
+open
+submitting                    method, url, data
+submitted                     method, url, data
 ============================  ================================
 
 Settings

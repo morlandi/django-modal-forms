@@ -122,3 +122,20 @@
     text-decoration: none;
     cursor: pointer;
 }
+
+
+/*
+ *  Sweetalert2 fix for bs3
+ */
+
+/* https://github.com/sweetalert2/sweetalert2/issues/855 */
+/*
+.swal2-popup {
+  font-size: 1.6rem !important;
+}
+
+.swal2-actions button {
+    min-width: 8em;
+    margin: 0 6px;
+}
+*/

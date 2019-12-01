@@ -8,28 +8,16 @@ class Dialog {
      * Constructor
      *
      * @param {HTMLElement} element - the dialog box (if null, "#dialog_generic" is used as default)
-     * @param {object} options - check "this._options" defaults for a full list of available options
+     * @param {object} options - check "this.options" defaults for a full list of available options
      */
 
-    constructor(element=null, options={}) {
+    constructor(options={}) {
 
         self = this;
 
-        // Check and save "element"
-        if (element == null) {
-            element = '#dialog_generic';
-        }
-
-        self._name = element;
-        self._element = $(element);
-        if (self._element.length <= 0) {
-            var message = 'ERROR: dialog "' + element + '" not found';
-            console.log(message);
-            ModalForms.display_server_error(message);
-        }
-
         // Default options
-        self._options = {
+        self.options = {
+            dialog_selector: '#dialog_generic',
             html: '',
             url: '',
             width: null,
@@ -48,10 +36,17 @@ class Dialog {
 
         // Override with user-supplied custom options
         if (options) {
-            Object.assign(self._options, options);
+            Object.assign(self.options, options);
         }
 
-        self._notify("created", [self._options]);
+        self.element = $(self.options.dialog_selector);
+        if (self.element.length <= 0) {
+            var message = 'ERROR: dialog "' + self.options.dialog_selector + '" not found';
+            console.log(message);
+            ModalForms.display_server_error(message);
+        }
+
+        self._notify("created", {options: self.options});
     }
 
     /**
@@ -68,16 +63,21 @@ class Dialog {
      *  });
      */
 
-    _notify(event_name, event_info=[]) {
-        var self = this;
-        debugger
-        if (self.options.enable_trace) {
-            console.log('[Dialog] ' + event_name + ' %o', event_info);
-        }
-        self.element.trigger(event_name + ".dialog", [self].concat(event_info));
+    // _notify(event_name, event_info=[]) {
+    //     var self = this;
+    //     if (self.options.enable_trace) {
+    //         console.log('[Dialog] ' + event_name + ' %o', event_info);
+    //     }
+    //     self.element.trigger(event_name + ".dialog", [self].concat(event_info));
+    // }
 
+    _notify(event_name, params={}) {
+        var self = this;
+        if (self.options.enable_trace) {
+            console.log('[Dialog ' + event_name + '] dialog: %o; params:%o', self, params);
+        }
         if (self.options.callback) {
-            self.options.callback(event_name + ".dialog", self, event_info);
+            self.options.callback(event_name, self, params);
         }
     }
 
@@ -85,9 +85,8 @@ class Dialog {
      * Getters and setters
      */
 
-    get element() { return this._element; }
-    get modal_name() { return this._name; }
-    get options() { return this._options; }
+    //get element() { return this._element; }
+    //get options() { return this._options; }
 
     /**
      * Close (hide) the dialog
@@ -145,7 +144,7 @@ class Dialog {
         var self = this;
         var header = self.element.find('.dialog-header');
 
-        self._notify('loading', [self.options.url]);
+        self._notify('loading', {url: self.options.url});
         header.addClass('loading');
         var promise = $.ajax({
             type: 'GET',
@@ -158,7 +157,7 @@ class Dialog {
             }
         }).done(function(data, textStatus, jqXHR) {
             self.element.find('.dialog-body').html(data);
-            self._notify('loaded', [self.options.url]);
+            self._notify('loaded', {url: self.options.url});
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.log('ERROR: errorThrown=%o, textStatus=%o, jqXHR=%o', errorThrown, textStatus, jqXHR);
             ModalForms.display_server_error(errorThrown);
@@ -267,7 +266,7 @@ class Dialog {
             var method = form.attr('method') || 'post';
             var data = form.serialize();
 
-            self._notify('submitting', [method, url, data]);
+            self._notify('submitting', {method: method, url: url, data:data});
             $.ajax({
                 type: method,
                 url: url,
@@ -294,7 +293,7 @@ class Dialog {
                     self._form_ajax_submit();
                 } else {
                     // otherwise, we've done and can close the modal
-                    self._notify('submitted', [method, url, data]);
+                    self._notify('submitted', {method: method, url: url, data: data});
                     self.close();
                 }
 
@@ -304,322 +303,15 @@ class Dialog {
             }).always(function() {
                 header.removeClass('loading');
             });
-
-            /*
-            $.ajax({
-                type: method,
-                url: url,
-                data: $(this).serialize(),
-                success: function(xhr, ajaxOptions, thrownError) {
-
-                    // update the modal body with the new form
-                    $(modal).find('.modal-body').html(xhr);
-
-                    // If the server sends back a successful response,
-                    // we need to further check the HTML received
-
-                    // If xhr contains any field errors,
-                    // the form did not validate successfully,
-                    // so we keep it open for further editing
-                    //if ($(xhr).find('.has-error').length > 0) {
-                    if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
-                        formAjaxSubmit(caller_event, modal, url, cbAfterLoad, cbAfterSuccess);
-                    } else {
-                        // otherwise, we've done and can close the modal
-                        $(modal).modal('hide');
-                        if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
-                    }
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    console.log('SERVER ERROR: ' + thrownError);
-                },
-                complete: function() {
-                    header.removeClass('loading');
-                }
-            });
-            */
-        });
-    }
-
-
-    formAjaxSubmit(caller_event, modal, action, cbAfterLoad, cbAfterSuccess) {
-        var form = modal.find('.modal-body form');
-        var header = $(modal).find('.modal-header');
-
-        // use footer save button, if available
-        var btn_save = modal.find('.modal-footer .btn-save');
-        if (btn_save) {
-            modal.find('.modal-body form .form-submit-row').hide();
-            btn_save.off().on('click', function(event) {
-                modal.find('.modal-body form').submit();
-            });
-        }
-        if (cbAfterLoad) { cbAfterLoad(caller_event, modal); }
-
-        // Give focus to first visible form field
-        modal.find('form input:visible').first().focus().select();
-
-        // bind to the form’s submit event
-        $(form).on('submit', function(event) {
-
-            // prevent the form from performing its default submit action
-            event.preventDefault();
-            header.addClass('loading');
-
-            var url = $(this).attr('action') || action;
-
-            // serialize the form’s content and send via an AJAX call
-            // using the form’s defined action and method
-            $.ajax({
-                type: $(this).attr('method'),
-                url: url,
-                data: $(this).serialize(),
-                success: function(xhr, ajaxOptions, thrownError) {
-
-                    // update the modal body with the new form
-                    $(modal).find('.modal-body').html(xhr);
-
-                    // If the server sends back a successful response,
-                    // we need to further check the HTML received
-
-                    // If xhr contains any field errors,
-                    // the form did not validate successfully,
-                    // so we keep it open for further editing
-                    //if ($(xhr).find('.has-error').length > 0) {
-                    if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
-                        formAjaxSubmit(caller_event, modal, url, cbAfterLoad, cbAfterSuccess);
-                    } else {
-                        // otherwise, we've done and can close the modal
-                        $(modal).modal('hide');
-                        if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
-                    }
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    console.log('SERVER ERROR: ' + thrownError);
-                },
-                complete: function() {
-                    header.removeClass('loading');
-                }
-            });
         });
     }
 
 }
 
-/*
-        $.ajax({
-            type: 'GET',
-            url: url
-        }).done(function(data, textStatus, jqXHR) {
-            modal.find('.modal-body').html(data);
-            modal.modal('show');
-            formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log('jqXHR: %o', jqXHR);
-            console.log('textStatus: %o', textStatus);
-            console.log('errorThrown: %o', errorThrown);
-            //alert('SERVER ERROR: ' + errorThrown);
-            display_server_error(errorThrown);
-        });
-*/
-
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
 
 window.ModalForms = (function() {
-
-    function initModalDialog(event, modal_element) {
-        /*
-            You can customize the modal layout specifing optional "data" attributes
-            in the element (either <a> or <button>) which triggered the event;
-            "modal_element" identifies the modal HTML element.
-
-            Sample call:
-
-            <a href=""
-               data-title="Set value"
-               data-subtitle="Insert the new value to be assigned to the Register"
-               data-dialog-class="modal-lg"
-               data-icon="fa-keyboard-o"
-               data-button-save-label="Save"
-               onclick="openModalDialog(event, '#modal_generic'); return false;">
-                <i class="fa fa-keyboard-o"></i> Open generic modal (no contents)
-            </a>
-        */
-        var modal = $(modal_element);
-        if (modal.length <= 0) {
-            console.log('ERROR: modal "%o" not found', modal_element);
-            display_server_error(sprintf('ERROR: modal "%s" not found', modal_element));
-        }
-        var target = $(event.target);
-
-        var title = target.data('title') || '';
-        var subtitle = target.data('subtitle') || '';
-        // either "modal-lg" or "modal-sm" or nothing
-        var dialog_class = (target.data('dialog-class') || '') + ' modal-dialog';
-        var icon_class = (target.data('icon') || 'fa-laptop') + ' fa modal-icon';
-        var button_save_label = target.data('button-save-label') || 'Salva';
-
-        modal.find('.modal-dialog').attr('class', dialog_class);
-        modal.find('.modal-title').text(title);
-        modal.find('.modal-subtitle').text(subtitle);
-        modal.find('.modal-header .title-wrapper i').attr('class', icon_class);
-        modal.find('.modal-footer .btn-save').text(button_save_label);
-        modal.find('.modal-body').html('');
-
-        // Annotate with target (just in case)
-        modal.data('target', target);
-
-        if (modal.hasClass('draggable')) {
-            modal.find('.xmodal-dialog').draggable({
-                handle: '.xmodal-header'
-            });
-        }
-
-        return modal;
-    }
-
-    /*
-    function openModalDialog(event, modal) {
-        // If "modal" is a selector, initialize a modal object,
-        // otherwise just use it
-        if ($.type(modal) == 'string') {
-            modal = initModalDialog(event, modal);
-        }
-        modal.modal('show');
-    }
-    */
-
-
-    function getCookie(name) {
-        var value = '; ' + document.cookie,
-            parts = value.split('; ' + name + '=');
-        if (parts.length == 2) return parts.pop().split(';').shift();
-    }
-
-
-    function formAjaxSubmit(caller_event, modal, action, cbAfterLoad, cbAfterSuccess) {
-        var form = modal.find('.modal-body form');
-        var header = $(modal).find('.modal-header');
-
-        // use footer save button, if available
-        var btn_save = modal.find('.modal-footer .btn-save');
-        if (btn_save) {
-            modal.find('.modal-body form .form-submit-row').hide();
-            btn_save.off().on('click', function(event) {
-                modal.find('.modal-body form').submit();
-            });
-        }
-        if (cbAfterLoad) { cbAfterLoad(caller_event, modal); }
-
-        // Give focus to first visible form field
-        modal.find('form input:visible').first().focus().select();
-
-        // bind to the form’s submit event
-        $(form).on('submit', function(event) {
-
-            // prevent the form from performing its default submit action
-            event.preventDefault();
-            header.addClass('loading');
-
-            var url = $(this).attr('action') || action;
-
-            // serialize the form’s content and send via an AJAX call
-            // using the form’s defined action and method
-            $.ajax({
-                type: $(this).attr('method'),
-                url: url,
-                data: $(this).serialize(),
-                success: function(xhr, ajaxOptions, thrownError) {
-
-                    // update the modal body with the new form
-                    $(modal).find('.modal-body').html(xhr);
-
-                    // If the server sends back a successful response,
-                    // we need to further check the HTML received
-
-                    // If xhr contains any field errors,
-                    // the form did not validate successfully,
-                    // so we keep it open for further editing
-                    //if ($(xhr).find('.has-error').length > 0) {
-                    if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
-                        formAjaxSubmit(caller_event, modal, url, cbAfterLoad, cbAfterSuccess);
-                    } else {
-                        // otherwise, we've done and can close the modal
-                        $(modal).modal('hide');
-                        if (cbAfterSuccess) { cbAfterSuccess(caller_event, modal); }
-                    }
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    console.log('SERVER ERROR: ' + thrownError);
-                },
-                complete: function() {
-                    header.removeClass('loading');
-                }
-            });
-        });
-    }
-
-
-    function openModalDialogWithForm(event, modal, cbAfterLoad, cbAfterSuccess) {
-        /*
-            Example:
-
-            <div class="tools">
-                {% ifhasperm model 'change' %}
-
-                    <a href=""
-                       class="pull-right btn btn-xs btn-primary"
-                       data-action="{{object|change_object_url}}"
-                       data-title="{% trans 'Change' %} {{ model|model_verbose_name }}"
-                       data-subtitle=""
-                       data-dialog-class="modal-lg"
-                       data-icon="fa-edit"
-                       onclick="openModalDialogWithForm(event, '#modal_generic', null, function() {
-                          redraw_table(event.target);
-                       }); return false;"
-                    >
-                        <i class="fa fa-edit" style="pointer-events: none;"></i>
-                        {% trans 'Change' %}
-                    </a>
-
-                {% endifhasperm %}
-                ...
-
-        */
-
-        // If "modal" is a selector, initialize a modal object,
-        // otherwise just use it
-        if ($.type(modal) == 'string') {
-            modal = initModalDialog(event, modal);
-        }
-
-        //var url = $(event.target).data('action');
-        var url = $(event.target).data('action') || $(event.target).attr('href');
-        if (!url) {
-            console.log('ERROR: openModalDialogWithForm() could not retrieve action from event');
-            return;
-        }
-
-        $.ajax({
-            type: 'GET',
-            url: url
-        }).done(function(data, textStatus, jqXHR) {
-            modal.find('.modal-body').html(data);
-            modal.modal('show');
-            formAjaxSubmit(event, modal, url, cbAfterLoad, cbAfterSuccess);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log('jqXHR: %o', jqXHR);
-            console.log('textStatus: %o', textStatus);
-            console.log('errorThrown: %o', errorThrown);
-            //alert('SERVER ERROR: ' + errorThrown);
-            display_server_error(errorThrown);
-        });
-    }
-
-    /*
-     * UI helpers
-     */
 
     function display_server_error(errorDetails) {
 
@@ -643,9 +335,230 @@ window.ModalForms = (function() {
         }
     }
 
+    /*
+     * Routing
+     */
+
+    function redirect(url, show_layer=false) {
+        // see: http://stackoverflow.com/questions/503093/how-can-i-make-a-redirect-page-in-jquery-javascript
+        // similar behavior as an HTTP redirect
+        console.log('redirect(): ' + url);
+        if (show_layer) {
+            overlay_show('body');
+        }
+        window.location.replace(url);
+    }
+
+    function gotourl(url, show_layer=false) {
+        // see: http://stackoverflow.com/questions/503093/how-can-i-make-a-redirect-page-in-jquery-javascript
+        // similar behavior as clicking on a link
+        console.log('gotourl(): ' + url);
+        if (show_layer) {
+            overlay_show('body');
+        }
+        window.location.href = url;
+    }
+
+    function reload_page(show_layer=false) {
+        if (show_layer) {
+            overlay_show('body');
+        }
+        window.location.reload(true);
+    }
+
+
+    /*
+     *  Overlay
+     *
+     *  Requires: gasparesganga-jquery-loading-overlay
+     */
+
+    function overlay_show(element) {
+        $(element).LoadingOverlay(
+            'show', {
+                //background: 'rgba(0, 167, 140, 0.2)',
+                background: 'rgba(0, 0, 0, 0.3)',
+                image: '',
+                fontawesome: 'fa fa-cog fa-spin'
+            }
+        );
+    }
+
+    function overlay_hide(element) {
+        $(element).LoadingOverlay('hide');
+    }
+
+    function hide_mouse_cursor() {
+        // https://stackoverflow.com/questions/9681080/changing-cursor-to-waiting-in-javascript-jquery#25207986
+        //$('body').css('cursor', 'none');
+        //$('body').addClass('waiting');
+        $("body").css("cursor", "none");
+    }
+
+    // Speed up calls to hasOwnProperty
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+
+    // http://stackoverflow.com/questions/4994201/is-object-empty
+    function isEmptyObject(obj) {
+
+        // null and undefined are "empty"
+        if (obj == null) return true;
+
+        // Assume if it has a length property with a non-zero value
+        // that that property is correct.
+        if (obj.length > 0)    return false;
+        if (obj.length === 0)  return true;
+
+        // If it isn't an object at this point
+        // it is empty, but it can't be anything *but* empty
+        // Is it empty?  Depends on your application.
+        if (typeof obj !== "object") return true;
+
+        // Otherwise, does it have any properties of its own?
+        // Note that this doesn't handle
+        // toString and valueOf enumeration bugs in IE < 9
+        for (var key in obj) {
+            if (hasOwnProperty.call(obj, key)) return false;
+        }
+
+        return true;
+    }
+
+
+    // Find an Object by attribute in an Array
+    // http://stackoverflow.com/questions/5579678/jquery-how-to-find-an-object-by-attribute-in-an-array#19154349
+    function lookup(array, prop, value) {
+        for (var i = 0, len = array.length; i < len; i++)
+            if (array[i] && array[i][prop] === value) return array[i];
+        return null;
+    }
+
+
+    // Adapts canvas size to desired size;
+    function adjust_canvas_size(id) {
+    /*
+        Usage:
+
+            <canvas id="{{client.id}}-chart1" style="width: 100%; height:200px;">
+            </canvas>
+
+            ...
+
+            <script type="text/javascript">
+                adjust_canvas_size("{{client.id}}-chart1");
+            < /script>
+
+        Adapted from:
+        https://stackoverflow.com/questions/18679414/how-put-percentage-width-into-html-canvas-no-css#18680851
+    */
+
+        /// get computed style for canvas
+        var canvas = document.getElementById(id);
+        var cs = getComputedStyle(canvas);
+
+        /// these will return dimensions in *pixel* regardless of what
+        /// you originally specified for image:
+        var width = parseInt(cs.getPropertyValue('width'), 10);
+        var height = parseInt(cs.getPropertyValue('height'), 10);
+
+        // /// now use this as width and height for your canvas element:
+        // var canvas = document.getElementById(id);
+
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+
+    function getCookie(name) {
+        var value = '; ' + document.cookie,
+            parts = value.split('; ' + name + '=');
+        if (parts.length == 2) return parts.pop().split(';').shift();
+    }
+
+
+    /**
+     * Invoke remote action upon user confirmation.
+     *
+     * Display a dialog to ask for user confirmation, then invoke remote action;
+     * after successfull execution, call supplied callback with server result.
+     *
+     * @param {string}              url                 Server action to be invoked.
+     * @param {object}              options             Display options.
+     * @param {afterDoneCallback}   [function]          Callback to be invoked after successfull execution.
+     * @param {object}              data (optional)     If supplied, call server action via POST (instead of get) passing by data
+     *
+     * @return {none}
+     *
+     *  Requires: sweetalert2
+     *
+     */
+
+    function confirmRemoteAction(url, options, afterDoneCallback, data=null) {
+
+        var options = {
+            confirmButtonClass: 'btn-success',
+            cancelButtonClass: 'btn-default',
+            buttonsStyling: false,
+            reverseButtons: true,
+            title: 'Are you sure ?',
+            text: '',
+            type: 'warning',
+            showCancelButton: true,
+            cancelButtonText: 'Cancel',
+            confirmButtonText: 'Confirm'
+        };
+        Object.assign(options, options);
+
+        swal.fire({
+            confirmButtonClass: 'btn btn-lg ' + options.confirmButtonClass,
+            cancelButtonClass: 'btn btn-lg ' + options.cancelButtonClass,
+            buttonsStyling: options.buttonsStyling,
+            reverseButtons: options.reverseButtons,
+            title: options.title,
+            text: options.text,
+            type: options.type,
+            showCancelButton: options.showCancelButton,
+            cancelButtonText: options.cancelButtonText,
+            confirmButtonText: options.confirmButtonText
+        }).then((result) => {
+            if (result.value) {
+                // User selected "Yes", so proceed with remote call
+                var promise = null;
+                if (data === null) {
+                    promise = $.ajax({
+                        type: 'GET',
+                        url: url
+                    });
+                }
+                else {
+                    promise = $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: data,
+                        cache: false,
+                        crossDomain: true,
+                        dataType: 'json',
+                        headers: {'X-CSRFToken': getCookie('csrftoken')}
+                    });
+                }
+                promise.done(function(data) {
+                    if (afterDoneCallback) {
+                        afterDoneCallback(data);
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log('ERROR: ' + jqXHR.responseText);
+                    display_server_error(errorThrown);
+                });
+            } else if (result.dismiss === swal.DismissReason.cancel) {
+                // Read more about handling dismissals
+            }
+        });
+    }
+
     return {
-        //openModalDialog: openModalDialog,
-        openModalDialogWithForm: openModalDialogWithForm,
+        hide_mouse_cursor: hide_mouse_cursor,
+        reload_page: reload_page,
         display_server_error: display_server_error
     };
 
