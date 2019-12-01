@@ -27,7 +27,6 @@ class Dialog {
             min_height: null,
             max_height: null,
             button_save_label: 'Save',
-            !!! se null, nascondere il corrispondente bottone
             button_close_label: 'Cancel',
             title: '',
             footer_text: '',
@@ -123,9 +122,22 @@ class Dialog {
         if (self.options.max_height) { body.css('max-height', self.options.max_height); }
 
         header.find('.title').html('&nbsp;' + self.options.title);
-        footer.find('.btn-save').val(self.options.button_save_label);
-        footer.find('.btn-close').val(self.options.button_close_label);
         footer.find('.text').html('&nbsp;' + self.options.footer_text);
+
+        var btn_save = footer.find('.btn-save');
+        if (self.options.button_save_label === null) {
+            btn_save.hide();
+        }
+        else {
+            btn_save.val(self.options.button_save_label);
+        }
+        var btn_close = footer.find('.btn-close');
+        if (self.options.button_close_label === null) {
+            btn_close.hide();
+        }
+        else {
+            btn_close.val(self.options.button_close_label);
+        }
 
         self._notify('initialized');
     }
@@ -558,9 +570,18 @@ window.ModalForms = (function() {
     }
 
     return {
-        hide_mouse_cursor: hide_mouse_cursor,
+        display_server_error: display_server_error,
+        redirect: redirect,
+        gotourl: gotourl,
         reload_page: reload_page,
-        display_server_error: display_server_error
+        overlay_show: overlay_show,
+        overlay_hide: overlay_hide,
+        hide_mouse_cursor: hide_mouse_cursor,
+        isEmptyObject: isEmptyObject,
+        lookup: lookup,
+        adjust_canvas_size: adjust_canvas_size,
+        getCookie: getCookie,
+        confirmRemoteAction: confirmRemoteAction,
     };
 
 })();
