@@ -36,7 +36,7 @@ In your base template, add:
 
     <script src="{% static 'modal_forms/js/modal_forms.jsx' %}" type="text/jsx"></script>
 
-    {% include 'modal_forms/modals.html' %}
+    {% include 'modal_forms/dialogs.html' %}
 
 Basic Usage
 -----------
@@ -129,20 +129,31 @@ Sample usage in a template:
 Dialog class public methods
 ---------------------------
 
-TODO: extract doc from js source ...
+- constructor(options={})
+- open(show=true)
+- close()
+- show()
 
+Options (with default values)::
 
-constructor(element=null, options={})
-    ...
+    self.options = {
+        dialog_selector: '#dialog_generic',
+        html: '',
+        url: '',
+        width: null,
+        min_width: null,
+        max_width: null,
+        height: null,
+        min_height: null,
+        max_height: null,
+        button_save_label: 'Save',
+        button_close_label: 'Cancel',
+        title: '',
+        footer_text: '',
+        enable_trace: false,
+        callback: null
+    };
 
-close()
-    ...
-
-show()
-    ...
-
-open(show=true)
-    ...
 
 
 Notifications
@@ -194,13 +205,18 @@ MODAL_FORMS_FORM_LAYOUT_FLAVOR
     Default: "bs4"
 
 
-Utilities
----------
+Utilities (module ModalForms)
+-----------------------------
 
-ModalForms.display_server_error(errorDetails)
-
-    Report the error to the user
-
-    First, we try to use SweetAlert2 if available.
-
-    Failing that, we fallback to a simple alert box.
+- display_server_error(errorDetails)
+- redirect(url, show_layer=false)
+- gotourl(url, show_layer=false)
+- reload_page(show_layer=false)
+- overlay_show(element)
+- overlay_hide(element)
+- hide_mouse_cursor()
+- isEmptyObject(obj)
+- lookup(array, prop, value)
+- adjust_canvas_size(id)
+- getCookie(name)
+- confirmRemoteAction(url, options, afterDoneCallback, data=null)
