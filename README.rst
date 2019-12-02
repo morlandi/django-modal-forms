@@ -161,33 +161,41 @@ Options (with default values)::
 Notifications
 -------------
 
-Sample usages client-side:
+During it's lifetime, the Dialog will notify all interesting events to the caller,
+provided he supplies a suitable callback in the contructor:
+
+    self.options.callback(event_name, dialog, params)
+
+Example:
 
 .. code:: javascript
 
-    $('#dialog_generic').on('created.dialog', function(event, dialog, options) {
-        var target = $(event.target);
-        console.log('Dialog created: event=%o (with target=%o), dialog=%o, options=%o', event, target, dialog, options);
+    dialog1 = new Dialog({
+        ...
+        callback: function(event_name, dialog, params) {
+            console.log('event_name: %o, dialog: %o, params: %o', event_name, dialog, params);
+        }
     });
 
-or
+Result::
 
-.. code:: javascript
+    event_name: "created", dialog: Dialog {options: {…}, element: …}, params: {options: {…}}
+    event_name: "initialized", dialog: Dialog {options: {…}, element: …}, params: {}
+    event_name: "open", dialog: Dialog {options: {…}, element: …}, params: {}
+    event_name: "shown", dialog: Dialog {options: {…}, element: …}, params: {}
+    event_name: "loading", dialog: Dialog {options: {…}, element: …}, params: {url: "/admin_ex/popup/"}
+    event_name: "loaded", dialog: Dialog {options: {…}, element: …}, params: {url: "/admin_ex/popup/"}
+    event_name: "submitting", dialog: Dialog {options: {…}, element: …}, params: {method: "post", url: "/admin_ex/popup/", data: "text=&number=aaa"}
+    event_name: "submitted", dialog: Dialog {options: {…}, element: …}, params: {method: "post", url: "/admin_ex/popup/", data: "text=111&number=111"}
+    event_name: "closed", dialog: Dialog {options: {…}, element: …}, params: {}
+
+You can also trace all events in the console setting the boolean flag `enable_trace`.
 
 
-    dialog1.element.on('loaded.dialog', function(event, dialog, url) {
-        var target = $(event.target);
-        console.log('Dialog loaded: event=%o (with target=%o), dialog=%o, url=%o', event, target, dialog, url);
-        dialog.show();
-        setTimeout(function() {
-            dialog.close();
-        }, 3000);
-    });
-
-Supplied events:
+Event list:
 
 ============================  ================================
-event_name                    parameters
+event_name                    params
 ============================  ================================
 created                       options
 closed
