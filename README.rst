@@ -4,6 +4,8 @@ django-modal-forms
 
 A Django helper app to add editing capabilities to the frontend using modal forms.
 
+Bases on my previous research as documented here: `Editing Django models in the front end <https://editing-django-models-in-the-frontend.readthedocs.io/en/latest/>`_
+
 .. contents::
 
 .. sectnum::
