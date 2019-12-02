@@ -303,6 +303,7 @@ class Dialog {
                 // so we keep it open for further editing
                 //if ($(xhr).find('.has-error').length > 0) {
                 if ($(xhr).find('.has-error').length > 0 || $(xhr).find('.errorlist').length > 0) {
+                    self._notify('loaded', {url: url});
                     self._form_ajax_submit();
                 } else {
                     // otherwise, we've done and can close the modal
