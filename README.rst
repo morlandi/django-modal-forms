@@ -157,6 +157,43 @@ Options (with default values)::
     };
 
 
+Default dialog layout
+---------------------
+
+When contructing a Dialog, you can use the `dialog_selector` option to select which
+HTML fragment of the page will be treated as the dialog to work with.
+
+It is advisable to use an HTML structure similar to the default layout:
+
+.. code:: html
+
+    <div id="dialog_generic" class="dialog draggable">
+        <div class="dialog-dialog">
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <span class="spinner">
+                        <i class="fa fa-spinner fa-spin"></i>
+                    </span>
+                    <span class="close">&times;</span>
+                    <div class="title">Title</div>
+                </div>
+                <div class="dialog-body ui-front">
+
+                </div>
+                <div class="dialog-footer">
+                    <input type="submit" value="Close" class="btn btn-close" />
+                    <input type="submit" value="Save" class="btn btn-save" />
+                    <div class="text">footer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+Notes:
+
+- ".draggable" make the Dialog draggable
+- adding ".ui-front" to the ".dialog-box" element helps improving the behaviour of the dialog on a mobile client
+
 
 Notifications
 -------------
