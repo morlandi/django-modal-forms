@@ -570,6 +570,68 @@ window.ModalForms = (function() {
         });
     }
 
+    //
+    // Adapted from:
+    // https://github.com/Gozala/querystring
+    //
+    // If obj.hasOwnProperty has been overridden, then calling
+    // obj.hasOwnProperty(prop) will break.
+    // See: https://github.com/joyent/node/issues/1707
+    function hasOwnProperty2(obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+
+    function querystring_parse(qs, sep, eq, options) {
+        sep = sep || '&';
+        eq = eq || '=';
+        var obj = {};
+
+        if (typeof qs !== 'string' || qs.length === 0) {
+            return obj;
+        }
+
+        var regexp = /\+/g;
+        qs = qs.split(sep);
+
+        var maxKeys = 1000;
+        if (options && typeof options.maxKeys === 'number') {
+            maxKeys = options.maxKeys;
+        }
+
+        var len = qs.length;
+        // maxKeys <= 0 means that we should not limit keys count
+        if (maxKeys > 0 && len > maxKeys) {
+            len = maxKeys;
+        }
+
+        for (var i = 0; i < len; ++i) {
+            var x = qs[i].replace(regexp, '%20'),
+                idx = x.indexOf(eq),
+                kstr, vstr, k, v;
+
+            if (idx >= 0) {
+                kstr = x.substr(0, idx);
+                vstr = x.substr(idx + 1);
+            } else {
+                kstr = x;
+                vstr = '';
+            }
+
+            k = decodeURIComponent(kstr);
+            v = decodeURIComponent(vstr);
+
+            if (!hasOwnProperty2(obj, k)) {
+                obj[k] = v;
+            } else if (Array.isArray(obj[k])) {
+                obj[k].push(v);
+            } else {
+                obj[k] = [obj[k], v];
+            }
+        }
+
+        return obj;
+    }
+
     return {
         display_server_error: display_server_error,
         redirect: redirect,
@@ -583,6 +645,7 @@ window.ModalForms = (function() {
         adjust_canvas_size: adjust_canvas_size,
         getCookie: getCookie,
         confirmRemoteAction: confirmRemoteAction,
+        querystring_parse: querystring_parse
     };
 
 })();
