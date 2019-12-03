@@ -267,6 +267,7 @@ Utilities (module ModalForms)
 - adjust_canvas_size(id)
 - getCookie(name)
 - confirmRemoteAction(url, options, afterDoneCallback, data=null)
+- querystring_parse(qs, sep, eq, options)
 
 Form rendering helpers
 ----------------------
