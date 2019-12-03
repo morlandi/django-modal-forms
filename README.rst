@@ -285,16 +285,21 @@ Form rendering helpers
     </style>
 
     <div class="row">
-        <div class="col-sm-4">
+        <div class="col-sm-12">
             <form action="{{ action }}" method="post" class="form" autocomplete="off">
                 {% csrf_token %}
                 {% render_form form %}
+                <input type="hidden" name="object_id" value="{{ object.id|default:'' }}">
                 <div class="form-submit-row">
                     <input type="submit" value="Save" />
                 </div>
             </form>
         </div>
     </div>
+
+As a convenience when editing a Django Model, we've added an hidden field "object_id";
+in other occasions, this is useless (but also armless, as long as the form doesn't
+contain a field called "object").
 
 Template tags:
 
