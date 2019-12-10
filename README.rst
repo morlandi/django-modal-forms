@@ -40,6 +40,31 @@ In your base template, add:
 
     {% include 'modal_forms/dialogs.html' %}
 
+Also, setup handling of ".jsx" files; for example using Babel::
+
+    COMPRESS_PRECOMPILERS = (
+        ...
+        ('text/jsx', 'cat {infile} | ./node_modules/babel-cli/bin/babel.js --presets babel-preset-es2015 > {outfile}'),
+    )
+
+and for local debugging::
+
+    # Remove js tranpiling for easier debugging
+    COMPRESS_PRECOMPILERS = (
+        ...
+        # !!! ('text/jsx', 'cat {infile} | ./node_modules/babel-cli/bin/babel.js --presets babel-preset-es2015 > {outfile}'),
+        ('text/jsx', 'cat {infile} | ./node_modules/babel-cli/bin/babel.js > {outfile}'),
+    )
+
+then:
+
+.. code:: bash
+
+    npm install babel-cli
+    npm install babel-preset-es2015
+    npm install babel-preset-stage-2
+
+
 Basic Usage
 -----------
 
