@@ -40,7 +40,7 @@
 
     <fieldset>
         {% for field in form.visible_fields %}
-            {% render_form_field field=field flavor=FORM_LAYOUT_FLAVOR %}
+            {% render_form_field field flavor=FORM_LAYOUT_FLAVOR %}
         {% endfor %}
     </fieldset>
 

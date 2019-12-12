@@ -23,45 +23,57 @@
         </div>
     </div>
 
-    {% comment %}
-    <div class="form-row grp-row grp-cells-1 {% if field.errors %}grp-errors{% endif %} {{ field.html_name }}">
-        <div class="field-box l-2c-fluid l-d-4">
-            <div class="c-1">
-                <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
-            </div>
-            <div class="c-2">
-                {{ field }}
-                {% if field.help_text %}
-                <p class="grp-help">{{ field.help_text }}</p>
-                {% endif %}
-                {% if field.errors %}
-                    <ul class="errorlist">
-                        {% for error in field.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endcomment %}
-
 {% elif FORM_LAYOUT_FLAVOR == "bs4" %}
 
     <div class="form-group {% if field.errors %}field-with-errors{% endif %} {{ field.html_name }}">
-        <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
-        {% if field.errors %}
-            {{ field|add_field_attrs:"class=form-control is-invalid" }}
-            {% for error in field.errors %}
-                <div class="invalid-tooltip">
-                    {{ error }}
-                </div>
-            {% endfor %}
+
+        {% if field.field.widget.input_type == 'checkbox' %}
+            {# TODO: show field errors, if any #}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="{{ field.html_name }}" id="{{ field.auto_id }}"
+                    {% if field.value %}checked{% endif %}
+                >
+                <label class="form-check-label" for="{{ field.html_name }}">
+                    {{ field.label }}
+                </label>
+            </div>
         {% else %}
-            {{ field|add_field_attrs:"class=form-control is-valid" }}
-        {% endif %}
-        {% if field.help_text %}
-            <small class="form-text text-muted">{{ field.help_text }}</small>
+
+            <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
+
+            {% if field.field.widget.input_type == 'radio' %}
+
+                {# TODO: show field errors, if any #}
+                {% for choice in field %}
+                    <div class="form-check">
+                        {{ choice.tag }}
+                        <label class="form-check-label" for="{{ choice.id_for_label }}">
+                            {{ choice.choice_label }}
+                        </label>
+                    </div>
+                {% endfor %}
+
+            {% else %}
+
+                {% if field.errors %}
+                    {{ field|add_field_attrs:"class=form-control is-invalid" }}
+                    {% for error in field.errors %}
+                        <div class="invalid-tooltip">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {% if field.form.is_bound %}
+                        {{ field|add_field_attrs:"class=form-control is-valid" }}
+                    {% else %}
+                        {{ field|add_field_attrs:"class=form-control" }}
+                    {% endif %}
+                {% endif %}
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+            {% endif %}
+
         {% endif %}
     </div>
 
