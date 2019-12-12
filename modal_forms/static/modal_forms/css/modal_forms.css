@@ -138,3 +138,23 @@
     margin: 0 6px;
 }
 */
+
+/*
+ *  Fixes for Bootstrap 4
+ */
+
+
+form.compact-fields .form-control {
+    width: auto;
+}
+
+form.compact-fields .form-control.is-valid {
+    /*background-image: none;*/
+}
+
+form .field-with-errors {
+    /* Required for correct positioning of .invalid-tooltip */
+    /* If not desired, use .invalid-feedback instead */
+    position: relative;
+    margin-bottom: 40px;
+}

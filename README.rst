@@ -274,8 +274,16 @@ Settings
 --------
 
 MODAL_FORMS_FORM_LAYOUT_FLAVOR
-    Default: "bs4"
+    Default flavor for form rendering
+        - Default: "generic"
+        - Accepted values: "generic", "bs4"
 
+"bs4" flavor
+------------
+
+Add the .compact-fields class to the form to modify the layout as in the right picture below:
+
+.. image:: screenshots/bs4-forms.png
 
 Utilities (module ModalForms)
 -----------------------------
@@ -354,7 +362,7 @@ Template tags:
         </div>
     </div>
 
-**render_form(form)** renders:
+**render_form(form, flavor=None)** renders:
 
 .. code:: html
 

@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.utils import timezone
 from constance import config
+from modal_forms.app_settings import FORM_LAYOUT_FLAVOR
 
 register = template.Library()
 
@@ -210,14 +211,43 @@ class CheckPermNode(template.Node):
 ################################################################################
 # Form rendering helpers
 
+# Adapted from:
+# https://blog.joeymasip.com/how-to-add-attributes-to-form-widgets-in-django-templates/
+@register.filter(name='add_field_attrs')
+def add_field_attrs(field, css):
+    """
+    Sample usage:
+
+        {{ field|add_field_attrs:"class=form-control,style=border: 1px solid red;" }}
+    """
+    attrs = {}
+    definition = css.split(',')
+
+    for d in definition:
+        # if ':' not in d:
+        #     attrs['class'] = d
+        # else:
+        #     key, val = d.split('=')
+        #     attrs[key] = val
+        if '=' not in d:
+            key = 'class'
+            val = d
+        else:
+            key, val = d.split('=')
+        attrs[key] = val
+
+    return field.as_widget(attrs=attrs)
+
 @register.inclusion_tag('modal_forms/render_form_field.html')
-def render_form_field(field):
+def render_form_field(field, flavor=None):
     return {
-        'field': field
+        'field': field,
+        'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,
     }
 
 @register.inclusion_tag('modal_forms/render_form.html')
-def render_form(form):
+def render_form(form, flavor=None):
     return {
-        'form': form
+        'form': form,
+        'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,
     }
