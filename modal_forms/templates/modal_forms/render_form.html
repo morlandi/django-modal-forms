@@ -34,6 +34,14 @@
     https://simpleisbetterthancomplex.com/article/2017/08/19/how-to-render-django-form-manually.html#rendering-bootstrap-4-forms
     {% endcomment %}
 
+    {% if form.non_field_errors %}
+        <ul class="errorlist">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     {% for hidden_field in form.hidden_fields %}
         {{ hidden_field }}
     {% endfor %}
