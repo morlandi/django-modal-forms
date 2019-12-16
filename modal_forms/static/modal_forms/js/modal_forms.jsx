@@ -570,6 +570,136 @@ window.ModalForms = (function() {
         });
     }
 
+
+    // http://stackoverflow.com/questions/16086162/handle-file-download-from-ajax-post#23797348
+    function downloadFromAjaxPost(url, params, headers, callback) {
+
+        // NOTE:
+        // jQuery ajax is not able to handle binary responses properly (can't set responseType),
+        // so it's better to use a plain XMLHttpRequest call.
+
+        /*
+        $.ajax({
+            url: url,
+            type: 'post',
+            //mimeType: 'application/pdf',
+            dataType: 'text',
+            //headers: {"Content-Type": "application/pdf"},
+            data: params
+        }).done(function(response, status, xhr) {
+            console.log('response length: %o', response.length);
+            console.log('status: %o', status);
+            console.log('xhr: %o', xhr);
+
+            var filename = "";
+            var disposition = xhr.getResponseHeader('Content-Disposition');
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                var matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+            }
+            var type = xhr.getResponseHeader('Content-Type');
+
+            var blob = new Blob([response], { type: type });
+
+            console.log('disposition: %o', disposition);
+            console.log('filename: %o', filename);
+            console.log('type: %o', type);
+            console.log('blob: %o', blob);
+
+            if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                window.navigator.msSaveBlob(blob, filename);
+            } else {
+                var URL = window.URL || window.webkitURL;
+                var downloadUrl = URL.createObjectURL(blob);
+
+                if (filename) {
+                    // use HTML5 a[download] attribute to specify filename
+                    var a = document.createElement("a");
+                    // safari doesn't support this yet
+                    if (typeof a.download === 'undefined') {
+                        window.location = downloadUrl;
+                    } else {
+                        a.href = downloadUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                    }
+                } else {
+                    window.location = downloadUrl;
+                }
+
+                setTimeout(function() { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log('jqXHR: %o', jqXHR);
+            console.log('textStatus: %o', textStatus);
+            console.log('errorThrown: %o', errorThrown);
+            alert('Error: ' + textStatus);
+        });
+        */
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+            if (this.status === 200) {
+                var filename = "";
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    var matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                }
+                var type = xhr.getResponseHeader('Content-Type');
+
+                var blob = new Blob([this.response], { type: type });
+                if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                    // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                    window.navigator.msSaveBlob(blob, filename);
+                } else {
+                    var URL = window.URL || window.webkitURL;
+                    var downloadUrl = URL.createObjectURL(blob);
+
+                    if (filename) {
+                        // use HTML5 a[download] attribute to specify filename
+                        var a = document.createElement("a");
+                        // safari doesn't support this yet
+                        if (typeof a.download === 'undefined') {
+                            window.location = downloadUrl;
+                        } else {
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+                    } else {
+                        window.location = downloadUrl;
+                        // if (target !== undefined) {
+                        //     window.open(downloadUrl, target);
+                        // }
+                        // else {
+                        //     window.location.href = downloadUrl;
+                        // }
+                    }
+
+                    setTimeout(function() { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                }
+            }
+            if (callback) {
+                callback();
+            }
+        };
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        $.each(headers, function(key, value) {
+            xhr.setRequestHeader(key, value);
+        });
+
+        xhr.send($.param(params));
+    }
+
+
     //
     // Adapted from:
     // https://github.com/Gozala/querystring
@@ -645,6 +775,7 @@ window.ModalForms = (function() {
         adjust_canvas_size: adjust_canvas_size,
         getCookie: getCookie,
         confirmRemoteAction: confirmRemoteAction,
+        downloadFromAjaxPost: downloadFromAjaxPost,
         querystring_parse: querystring_parse
     };
 
