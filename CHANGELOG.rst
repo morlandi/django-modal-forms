@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.4
+------
+* "simpletable" styles
+
 v0.0.3
 ------
 * downloadFromAjaxPost helper JS function added

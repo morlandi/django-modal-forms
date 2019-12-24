@@ -158,3 +158,17 @@ form .field-with-errors {
     position: relative;
     margin-bottom: 40px;
 }
+
+/*
+ * "simpletable" styles
+ */
+
+.simpletable {
+    border: 1px solid #cccccc;
+    border-collapse: collapse;
+
+    td {
+        padding: 2px;
+        border: 1px solid #cccccc;
+    }
+}
