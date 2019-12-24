@@ -169,6 +169,7 @@ form .field-with-errors {
 
 }
 
+.simpletable th,
 .simpletable td {
     padding: 2px;
     border: 1px solid #cccccc;
