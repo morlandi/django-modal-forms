@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.5
+------
+* "simpletable" fix
+
 v0.0.4
 ------
 * "simpletable" styles
