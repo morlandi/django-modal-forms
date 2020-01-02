@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.6
+------
+* add "has-error" class when appropriate in render_form_field tag, to trigger errors in modal forms
+
 v0.0.5
 ------
 * "simpletable" fix
