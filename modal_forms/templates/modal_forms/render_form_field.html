@@ -10,7 +10,7 @@
             <div>
                 {{ field }}
                 {% if field.help_text %}
-                <p class="help">{{ field.help_text }}</p>
+                <p class="help">{{ field.help_text|safe }}</p>
                 {% endif %}
                 {% if field.errors %}
                     <ul class="errorlist">
@@ -56,7 +56,9 @@
             {% else %}
 
                 {% if field.errors %}
-                    {{ field|add_field_attrs:"class=form-control is-invalid has-error" }}
+                    {% with "class=form-control is-invalid has-error"|add:","|add:field_attrs as css %}
+                        {{ field|add_field_attrs:css }}
+                    {% endwith %}
                     {% for error in field.errors %}
                         <div class="invalid-tooltip">
                             {{ error }}
@@ -64,13 +66,17 @@
                     {% endfor %}
                 {% else %}
                     {% if field.form.is_bound %}
-                        {{ field|add_field_attrs:"class=form-control is-valid" }}
+                        {% with "class=form-control is-valid"|add:","|add:field_attrs as css %}
+                            {{ field|add_field_attrs:css }}
+                        {% endwith %}
                     {% else %}
-                        {{ field|add_field_attrs:"class=form-control" }}
+                        {% with "class=form-control"|add:","|add:field_attrs as css %}
+                            {{ field|add_field_attrs:css }}
+                        {% endwith %}
                     {% endif %}
                 {% endif %}
                 {% if field.help_text %}
-                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
                 {% endif %}
             {% endif %}
 

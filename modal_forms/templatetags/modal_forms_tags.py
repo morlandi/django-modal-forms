@@ -234,14 +234,25 @@ def add_field_attrs(field, css):
             val = d
         else:
             key, val = d.split('=')
-        attrs[key] = val
+
+        if key in attrs:
+            attrs[key] += ' ' + val
+        else:
+            attrs[key] = val
 
     return field.as_widget(attrs=attrs)
 
 @register.inclusion_tag('modal_forms/render_form_field.html')
 def render_form_field(field, flavor=None):
+
+    # Example:
+    #   {'class': 'user-position', 'style': 'border: 1px solid red;'} --> 'class=user-position,style=border: 1px solid red;'
+    attrs = field.field.widget.attrs
+    field_attrs = ','.join(['='.join([key,value]) for key,value in attrs.items()])
+
     return {
         'field': field,
+        'field_attrs': field_attrs,
         'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,
     }
 
