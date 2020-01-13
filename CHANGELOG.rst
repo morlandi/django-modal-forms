@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.8
+------
+* fix
+
 v0.0.7
 ------
 * add custom widget attrs when rendering a field with render_form_fields()
