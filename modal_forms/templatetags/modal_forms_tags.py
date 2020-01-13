@@ -248,7 +248,7 @@ def render_form_field(field, flavor=None):
     # Example:
     #   {'class': 'user-position', 'style': 'border: 1px solid red;'} --> 'class=user-position,style=border: 1px solid red;'
     attrs = field.field.widget.attrs
-    field_attrs = ','.join(['='.join([key,value]) for key,value in attrs.items()])
+    field_attrs = ','.join(['='.join([key,str(value)]) for key,value in attrs.items()])
 
     return {
         'field': field,
