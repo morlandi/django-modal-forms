@@ -409,9 +409,57 @@ window.ModalForms = (function() {
         $("body").css("cursor", "none");
     }
 
+
+    /*
+     *  "Object" helpers
+     */
+
     // Speed up calls to hasOwnProperty
     var hasOwnProperty = Object.prototype.hasOwnProperty;
 
+    function logObject(element, obj) {
+        var html = '<table class="datatable">';
+        for (key in obj) {
+            if (key[0] == '*') {
+                html += sprintf('<tr><td colspan="2" style="height: 100px;">%s</td></tr>', obj[key]);
+            }
+            else {
+                html += sprintf('<tr><td style="width: 100px;">%s</td><td>%s</td></tr>', key, dumpObject(obj[key], 1, 0));
+            }
+        }
+        html += '</table>';
+        element.html(html);
+    }
+
+    function dumpObject(obj, max_depth, depth) {
+        if (depth >= max_depth) {
+            if (typeof obj == "object") {
+                return '{...}';
+            }
+            else {
+                return '...';
+            }
+        }
+        var text = '';
+        if (typeof obj == "object") {
+            text = "{";
+            var property = '';
+            for (property in obj) {
+                var child = obj[property];
+                if (typeof child == "object") {
+                    text += '"' + property + '": ' + dumpObject(child, max_depth - 1, depth + 1) + '; ';
+                }
+                else {
+                    text += '"' + property + '": ' + child + ', ';
+                }
+            }
+            text += "}";
+        }
+        else {
+            text = obj;
+        }
+        return text;
+    }
 
     // http://stackoverflow.com/questions/4994201/is-object-empty
     function isEmptyObject(obj) {
@@ -439,6 +487,25 @@ window.ModalForms = (function() {
         return true;
     }
 
+    // https://stackoverflow.com/questions/122102/what-is-the-most-efficient-way-to-deep-clone-an-object-in-javascript#122190
+    function cloneObject(obj) {
+        if (obj === null || typeof (obj) !== 'object' || 'isActiveClone' in obj)
+            return obj;
+
+        if (obj instanceof Date)
+            var temp = new obj.constructor(); //or new Date(obj);
+        else
+            var temp = obj.constructor();
+
+        for (var key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                obj['isActiveClone'] = null;
+                temp[key] = cloneObject(obj[key]);
+                delete obj['isActiveClone'];
+            }
+        }
+        return temp;
+    }
 
     // Find an Object by attribute in an Array
     // http://stackoverflow.com/questions/5579678/jquery-how-to-find-an-object-by-attribute-in-an-array#19154349
@@ -770,7 +837,10 @@ window.ModalForms = (function() {
         overlay_show: overlay_show,
         overlay_hide: overlay_hide,
         hide_mouse_cursor: hide_mouse_cursor,
+        logObject: logObject,
+        dumpObject: dumpObject,
         isEmptyObject: isEmptyObject,
+        cloneObject: cloneObject,
         lookup: lookup,
         adjust_canvas_size: adjust_canvas_size,
         getCookie: getCookie,
