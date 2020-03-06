@@ -139,6 +139,11 @@
 }
 */
 
+.swal2-actions button {
+    min-width: 6em;
+    margin: 0 6px;
+}
+
 /*
  *  Fixes for Bootstrap 4
  */

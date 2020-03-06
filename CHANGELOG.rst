@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.9
+------
+* fix confirmRemoteAction()
+
 v0.0.8
 ------
 * fix

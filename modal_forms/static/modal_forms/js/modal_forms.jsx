@@ -577,7 +577,7 @@ window.ModalForms = (function() {
 
     function confirmRemoteAction(url, options, afterDoneCallback, data=null) {
 
-        var options = {
+        var _options = {
             confirmButtonClass: 'btn-success',
             cancelButtonClass: 'btn-default',
             buttonsStyling: false,
@@ -589,19 +589,19 @@ window.ModalForms = (function() {
             cancelButtonText: 'Cancel',
             confirmButtonText: 'Confirm'
         };
-        Object.assign(options, options);
+        Object.assign(_options, options);
 
         swal.fire({
-            confirmButtonClass: 'btn btn-lg ' + options.confirmButtonClass,
-            cancelButtonClass: 'btn btn-lg ' + options.cancelButtonClass,
-            buttonsStyling: options.buttonsStyling,
-            reverseButtons: options.reverseButtons,
-            title: options.title,
-            text: options.text,
-            type: options.type,
-            showCancelButton: options.showCancelButton,
-            cancelButtonText: options.cancelButtonText,
-            confirmButtonText: options.confirmButtonText
+            confirmButtonClass: 'btn btn-lg ' + _options.confirmButtonClass,
+            cancelButtonClass: 'btn btn-lg ' + _options.cancelButtonClass,
+            buttonsStyling: _options.buttonsStyling,
+            reverseButtons: _options.reverseButtons,
+            title: _options.title,
+            text: _options.text,
+            type: _options.type,
+            showCancelButton: _options.showCancelButton,
+            cancelButtonText: _options.cancelButtonText,
+            confirmButtonText: _options.confirmButtonText
         }).then((result) => {
             if (result.value) {
                 // User selected "Yes", so proceed with remote call
@@ -620,7 +620,10 @@ window.ModalForms = (function() {
                         cache: false,
                         crossDomain: true,
                         dataType: 'json',
-                        headers: {'X-CSRFToken': getCookie('csrftoken')}
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'X-Requested-With': 'XMLHttpRequest'  // make sure request.is_ajax() return True on the server
+                        }
                     });
                 }
                 promise.done(function(data) {
