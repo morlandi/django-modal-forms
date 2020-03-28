@@ -153,6 +153,101 @@ Sample usage in a template:
     </a> /
 
 
+Example: form submission from a Dialog
+--------------------------------------
+
+TODO: TO BE REFINED ... AND VERIFIED ;)
+
+
+First of all, we need a view for form rendering and submission.
+
+For example:
+
+.. code:: python
+
+    @login_required
+    @never_cache
+    def edit_something(request, id_object=None):
+
+        # if not request.user.has_perm('backend.view_something') or not request.is_ajax():
+        #     raise PermissionDenied
+
+        if id_object is not None:
+            object = get_object_or_404(Something, id=id_object)
+        else:
+            object = None
+
+        template_name = 'modal_forms/generic_form_inner.html'
+
+        if request.method == 'POST':
+
+            form = SomethingForm(data=request.POST, instance=object)
+            if form.is_valid():
+                object = form.save(request)
+                if not request.is_ajax():
+                    # reload the page
+                    next = request.META['PATH_INFO']
+                    return HttpResponseRedirect(next)
+                # if is_ajax(), we just return the validated form, so the modal will close
+        else:
+            form = SomethingForm()
+
+        return render(request, template_name, {
+            'form': form,
+            'object': object,  # unused, but armless
+        })
+
+where:
+
+.. code:: python
+
+    class SomethingForm(forms.ModelForm):
+
+        class Meta:
+            model = Someghing
+            exclude = []
+
+        ...
+
+and an endpoint for Ajax call:
+
+File "urls.py" ...
+
+.. code:: python
+
+    path('j/edit_something/<int:id_object>/', ajax.edit_something, name='j_edit_something'),
+
+We can finally use the form in a Dialog:
+
+.. code:: javascript
+
+    $(document).ready(function() {
+
+        dialog1 = new Dialog({
+            dialog_selector: '#dialog_generic',
+            html: '<h1>Loading ...</h1>',
+            url: '/j/edit_something/{{ object.id }}/',
+            width: '400px',
+            min_height: '200px',
+            title: '<i class="fa fa-add"></i> Edit',
+            footer_text: '',
+            enable_trace: true,
+            callback: function(event_name, dialog, params) {
+                switch (event_name) {
+                    case "created":
+                        console.log('Dialog created: dialog=%o, params=%o', dialog, params);
+                        break;
+                    case "submitted":
+                        ModalForms.hide_mouse_cursor();
+                        ModalForms.reload_page(true);
+                        break;
+                }
+            }
+        });
+
+    });
+
+
 Dialog class public methods
 ---------------------------
 
