@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.10
+-------
+* optional extra_attrs added to render_form_field template tag
+
 v0.0.9
 ------
 * fix confirmRemoteAction()
