@@ -219,36 +219,69 @@ def add_field_attrs(field, css):
     Sample usage:
 
         {{ field|add_field_attrs:"class=form-control,style=border: 1px solid red;" }}
+
+    Prepending a value with "^" means: replace (instead of append); example:
+
+        {% render_form_field form.username extra_attrs="autocomplete=^off,autocorrect=off,autocapitalize=none" %}
     """
-    attrs = {}
-    definition = css.split(',')
 
-    for d in definition:
-        # if ':' not in d:
-        #     attrs['class'] = d
-        # else:
-        #     key, val = d.split('=')
-        #     attrs[key] = val
-        if '=' not in d:
+    # attrs = {}
+    # definition = css.split(',')
+    # for d in definition:
+    #     # if ':' not in d:
+    #     #     attrs['class'] = d
+    #     # else:
+    #     #     key, val = d.split('=')
+    #     #     attrs[key] = val
+    #     if '=' not in d:
+    #         key = 'class'
+    #         val = d
+    #     else:
+    #         key, val = d.split('=')
+    #     if key in attrs:
+    #         attrs[key] += ' ' + val
+    #     else:
+    #         attrs[key] = val
+
+    # Pars tokens and collect result as {key: [value1, value2, ...]
+    attrs_lists = {}
+    tokens = css.split(',')
+    for token in tokens:
+        # assume key='class' when key not specified
+        if '=' not in token:
             key = 'class'
-            val = d
+            val = token
         else:
-            key, val = d.split('=')
+            key, val = token.split('=')
+        # Make suer we have and entry for this key
+        if not key in attrs_lists:
+            attrs_lists[key] = []
+        # '^' means "replace"
+        if val.startswith('^'):
+            attrs_lists[key] = [val[1:], ]
+        else:
+            # append to existing values, but avoid duplicates
+            if not val in attrs_lists[key]:
+                attrs_lists[key].append(val)
 
-        if key in attrs:
-            attrs[key] += ' ' + val
-        else:
-            attrs[key] = val
+    # Convert from:
+    #     {key: [value1, value2, ...], }
+    # to:
+    #     {key: "value1 value2 ...", }
+    attrs = {k: ' '.join(v) for k, v in attrs_lists.items()}
 
     return field.as_widget(attrs=attrs)
 
 @register.inclusion_tag('modal_forms/render_form_field.html')
-def render_form_field(field, flavor=None):
+def render_form_field(field, flavor=None, extra_attrs=''):
 
     # Example:
     #   {'class': 'user-position', 'style': 'border: 1px solid red;'} --> 'class=user-position,style=border: 1px solid red;'
     attrs = field.field.widget.attrs
     field_attrs = ','.join(['='.join([key,str(value)]) for key,value in attrs.items()])
+
+    if extra_attrs:
+        field_attrs = ','.join([field_attrs, extra_attrs])
 
     return {
         'field': field,

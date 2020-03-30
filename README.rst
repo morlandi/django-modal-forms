@@ -153,6 +153,101 @@ Sample usage in a template:
     </a> /
 
 
+Example: form submission from a Dialog
+--------------------------------------
+
+TODO: TO BE REFINED ... AND VERIFIED ;)
+
+
+First of all, we need a view for form rendering and submission.
+
+For example:
+
+.. code:: python
+
+    @login_required
+    @never_cache
+    def edit_something(request, id_object=None):
+
+        # if not request.user.has_perm('backend.view_something') or not request.is_ajax():
+        #     raise PermissionDenied
+
+        if id_object is not None:
+            object = get_object_or_404(Something, id=id_object)
+        else:
+            object = None
+
+        template_name = 'modal_forms/generic_form_inner.html'
+
+        if request.method == 'POST':
+
+            form = SomethingForm(data=request.POST, instance=object)
+            if form.is_valid():
+                object = form.save(request)
+                if not request.is_ajax():
+                    # reload the page
+                    next = request.META['PATH_INFO']
+                    return HttpResponseRedirect(next)
+                # if is_ajax(), we just return the validated form, so the modal will close
+        else:
+            form = SomethingForm()
+
+        return render(request, template_name, {
+            'form': form,
+            'object': object,  # unused, but armless
+        })
+
+where:
+
+.. code:: python
+
+    class SomethingForm(forms.ModelForm):
+
+        class Meta:
+            model = Someghing
+            exclude = []
+
+        ...
+
+and an endpoint for Ajax call:
+
+File "urls.py" ...
+
+.. code:: python
+
+    path('j/edit_something/<int:id_object>/', ajax.edit_something, name='j_edit_something'),
+
+We can finally use the form in a Dialog:
+
+.. code:: javascript
+
+    $(document).ready(function() {
+
+        dialog1 = new Dialog({
+            dialog_selector: '#dialog_generic',
+            html: '<h1>Loading ...</h1>',
+            url: '/j/edit_something/{{ object.id }}/',
+            width: '400px',
+            min_height: '200px',
+            title: '<i class="fa fa-add"></i> Edit',
+            footer_text: '',
+            enable_trace: true,
+            callback: function(event_name, dialog, params) {
+                switch (event_name) {
+                    case "created":
+                        console.log('Dialog created: dialog=%o, params=%o', dialog, params);
+                        break;
+                    case "submitted":
+                        ModalForms.hide_mouse_cursor();
+                        ModalForms.reload_page(true);
+                        break;
+                }
+            }
+        });
+
+    });
+
+
 Dialog class public methods
 ---------------------------
 
@@ -305,18 +400,65 @@ Utilities (module ModalForms)
 Form rendering helpers
 ----------------------
 
+A `render_form(form, flavor=None)` template tag is available for form rendering:
+
+.. code:: html
+
+    {% load modal_forms_tags ... %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% render_form form %}
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-lg btn-primary btn-block">{% trans 'Submit' %}</button>
+        </div>
+    </form>
+
+For more a more advanced customization, you can use `render_form_field(field, flavor=None, extra_attrs='')` instead:
+
+.. code:: html
+
+    {% load modal_forms_tags ... %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% for hidden_field in form.hidden_fields %}
+            {{ hidden_field }}
+        {% endfor %}
+
+        <fieldset>
+            {% render_form_field form.username extra_attrs="autocomplete=^off,autocorrect=off,autocapitalize=none" %}
+            {% render_form_field form.password extra_attrs="autocomplete=^off,autocorrect=off,autocapitalize=none" %}
+        </fieldset>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-lg btn-primary btn-block">{% trans 'Submit' %}</button>
+        </div>
+    </form>
+
+In this second example, we supply `extra_attrs` attributes to each form field; these will be added to the
+attributes already derived from the Django Form field definitions.
+
+The special prefix `^` will be removed from the attribute, and interpreted as "replace" instead of "append".
+
+A generic template is also available:
+
 `generic_form_inner.html`:
 
 .. code:: html
 
     {% load i18n modal_forms_tags %}
-
-    <style>
-    .modal .grp-module {
-        border: none;
-        background-color: transparent;
-    }
-    </style>
 
     <div class="row">
         <div class="col-sm-12">
@@ -331,64 +473,7 @@ Form rendering helpers
         </div>
     </div>
 
-As a convenience when editing a Django Model, we've added an hidden field "object_id";
+Please note that, as a convenience when editing a Django Model, we've added an hidden field `object_id`;
 in other occasions, this is useless (but also armless, as long as the form doesn't
 contain a field called "object").
 
-Template tags:
-
-**render_form_field(field)** renders:
-
-.. code:: html
-
-    <div class="form-row {% if field.errors %}errors{% endif %} {{ field.html_name }}">
-        <div>
-            <div>
-                <label {% if field.field.required %}class="required"{% endif %} for="{{ field.id_for_label }}">{{ field.label }}:</label>
-            </div>
-            <div>
-                {{ field }}
-                {% if field.help_text %}
-                <p class="help">{{ field.help_text }}</p>
-                {% endif %}
-                {% if field.errors %}
-                    <ul class="errorlist">
-                        {% for error in field.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-**render_form(form, flavor=None)** renders:
-
-.. code:: html
-
-    {% load modal_forms_tags %}
-
-    {% if form.non_field_errors %}
-        <ul class="errorlist">
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% for hidden_field in form.hidden_fields %}
-        {% if hidden_field.errors %}
-            <ul class="errorlist">
-                {% for error in hidden_field.errors %}
-                    <li>(Hidden field {{ hidden_field.name }}) {{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        {{ hidden_field }}
-    {% endfor %}
-
-    <fieldset class="module grp-module" style="Xwidth: 100%">
-        {% for field in form.visible_fields %}
-            {% render_form_field field %}
-        {% endfor %}
-    </fieldset>
