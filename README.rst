@@ -320,7 +320,7 @@ Form rendering helpers
 
     <div class="row">
         <div class="col-sm-12">
-            <form action="{{ action }}" method="post" class="form" autocomplete="off">
+            <form action="{{ action }}" method="post" class="form" novalidate autocomplete="off">
                 {% csrf_token %}
                 {% render_form form %}
                 <input type="hidden" name="object_id" value="{{ object.id|default:'' }}">
