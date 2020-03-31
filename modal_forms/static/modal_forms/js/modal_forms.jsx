@@ -832,6 +832,43 @@ window.ModalForms = (function() {
         return obj;
     }
 
+    function set_datepicker_defaults(language_code) {
+
+        // https://stackoverflow.com/questions/494958/how-do-i-localize-the-jquery-ui-datepicker#30937754
+        $.datepicker.regional['it-it'] = {
+            closeText: 'Chiudi', // set a close button text
+            currentText: 'Oggi', // set today text
+            monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',   'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'], // set month names
+            monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'], // set short month names
+            dayNames: ['Domenica','Luned&#236','Marted&#236','Mercoled&#236','Gioved&#236','Venerd&#236','Sabato'], // set days names
+            dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'], // set short day names
+            dayNamesMin: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'], // set short day names
+            //dayNamesMin: ['Do','Lu','Ma','Me','Gi','Ve','Sa'], // set more short days names
+            dateFormat: 'dd/mm/yy' // set format date
+        };
+
+        $.datepicker.common = {
+            inline: true,
+            // nextText: '&rarr;',
+            // prevText: '&larr;',
+            nextText: '<i class="fa fa-arrow-right"></i>',
+            prevText: '<i class="fa fa-arrow-left"></i>',
+            showOtherMonths: true,
+            // dateFormat: 'dd MM yy',
+            // dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            //showOn: "button",
+            showOn: "both",
+            // buttonImage: "img/calendar-blue.png",
+            // buttonImageOnly: true,
+            buttonText: "<i class='fa fa-calendar'></i>",
+        };
+
+        $.datepicker.setDefaults($.datepicker.common);
+        if (language_code) {
+            $.datepicker.setDefaults($.datepicker.regional[language_code]);
+        }
+    }
+
     return {
         display_server_error: display_server_error,
         redirect: redirect,
@@ -849,7 +886,8 @@ window.ModalForms = (function() {
         getCookie: getCookie,
         confirmRemoteAction: confirmRemoteAction,
         downloadFromAjaxPost: downloadFromAjaxPost,
-        querystring_parse: querystring_parse
+        querystring_parse: querystring_parse,
+        set_datepicker_defaults: set_datepicker_defaults
     };
 
 })();

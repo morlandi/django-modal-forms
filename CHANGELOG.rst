@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.11
+-------
+* Datepicker support
+
 v0.0.10
 -------
 * optional extra_attrs added to render_form_field template tag

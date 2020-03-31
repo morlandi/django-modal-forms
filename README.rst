@@ -477,3 +477,50 @@ Please note that, as a convenience when editing a Django Model, we've added an h
 in other occasions, this is useless (but also armless, as long as the form doesn't
 contain a field called "object").
 
+Datepicker support
+------------------
+
+A basic support is provided to jquery-ui datepicker.
+
+Follow these steps:
+
+(1) Initialize datepicker deafult by calling `ModalForms.set_datepicker_defaults(language_code)` once:
+
+.. code:: javascript
+
+    <script language="javascript">
+        $(document).ready(function() {
+            moment.locale('it');
+            ModalForms.set_datepicker_defaults('{{LANGUAGE_CODE}}');
+            ...
+
+(2) In your form, make sure that the `datepicker` class is assigned to the input element;
+    for example:
+
+.. code:: python
+
+    class MyForm(forms.Form):
+
+        date = forms.DateField(widget=forms.DateInput())
+        ...
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['date'].widget = forms.DateInput(attrs={'class': 'datepicker'})
+
+(3) If loading the form in a dialog, rebind as necessary:
+
+.. code:: javascript
+
+    dialog1 = new Dialog({
+        ...
+        callback: function(event_name, dialog, params) {
+            switch (event_name) {
+                case "loaded":
+                    bindSelectables();
+                    dialog.element.find(".datepicker").datepicker({});
+                    break;
+                ...
+            }
+        }
+    });
