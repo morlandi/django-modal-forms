@@ -480,18 +480,19 @@ contain a field called "object").
 Datepicker support
 ------------------
 
-A basic support is provided to jquery-ui datepicker.
+A basic support is provided for jquery-ui datepicker.
 
 Follow these steps:
 
-(1) Initialize datepicker deafult by calling `ModalForms.set_datepicker_defaults(language_code)` once:
+(1) Initialize datepicker default by calling `ModalForms.set_datepicker_defaults(language_code)` once:
 
 .. code:: javascript
 
     <script language="javascript">
         $(document).ready(function() {
             moment.locale('it');
-            ModalForms.set_datepicker_defaults('{{LANGUAGE_CODE}}');
+
+            ModalForms.set_datepicker_defaults('{{LANGUAGE_CODE}}');    <-------------
             ...
 
 (2) In your form, make sure that the `datepicker` class is assigned to the input element;
@@ -518,7 +519,7 @@ Follow these steps:
             switch (event_name) {
                 case "loaded":
                     bindSelectables();
-                    dialog.element.find(".datepicker").datepicker({});
+                    dialog.element.find(".datepicker").datepicker({});    <-------------
                     break;
                 ...
             }
