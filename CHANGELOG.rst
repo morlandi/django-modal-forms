@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.12
+-------
+* Support for model forms in a Dialog (undocumented)
+
 v0.0.11
 -------
 * Datepicker support

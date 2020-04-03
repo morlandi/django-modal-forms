@@ -61,7 +61,7 @@ def change_object_url(object):
         <a href="{{object|change_object_url}}">change this object</a>
     """
     model = object.__class__
-    return reverse('frontend-helpers:object-change', args=(model._meta.app_label, model._meta.model_name, object.id))
+    return reverse('modal_forms:object-change', args=(model._meta.app_label, model._meta.model_name, object.id))
 
 
 @register.filter
@@ -71,7 +71,7 @@ def change_model_url(model, object_id):
 
         <a href="{{model|change_model_url:object.id}}">change this object</a>
     """
-    return reverse('frontend-helpers:object-change', args=(model._meta.app_label, model._meta.model_name, object_id))
+    return reverse('modal_forms:object-change', args=(model._meta.app_label, model._meta.model_name, object_id))
 
 
 @register.filter
@@ -81,7 +81,7 @@ def add_model_url(model):
 
         <a href="{{model|add_model_url}}">add a new object</a>
     """
-    return reverse('modal_helpers:object-add', args=(model._meta.app_label, model._meta.model_name))
+    return reverse('modal_forms:object-add', args=(model._meta.app_label, model._meta.model_name))
 
 
 @register.filter
@@ -92,7 +92,7 @@ def delete_object_url(object):
         <a href="{{object|delete_object_url}}">delete this object</a>
     """
     model = object.__class__
-    return reverse('modal_helpers:object-delete', args=(model._meta.app_label, model._meta.model_name, object.id))
+    return reverse('modal_forms:object-delete', args=(model._meta.app_label, model._meta.model_name, object.id))
 
 
 @register.filter
@@ -102,7 +102,7 @@ def delete_model_url(model, object_id):
 
         <a href="{{model|delete_model_url:object.id}}">delete this object</a>
     """
-    return reverse('modal_helpers:object-delete', args=(model._meta.app_label, model._meta.model_name, object_id))
+    return reverse('modal_forms:object-delete', args=(model._meta.app_label, model._meta.model_name, object_id))
 
 
 @register.filter
@@ -113,7 +113,7 @@ def clone_object_url(object):
         <a href="{{object|clone_object_url}}">clone this object</a>
     """
     model = object.__class__
-    return reverse('modal_helpers:object-clone', args=(model._meta.app_label, model._meta.model_name, object.id))
+    return reverse('modal_forms:object-clone', args=(model._meta.app_label, model._meta.model_name, object.id))
 
 
 @register.filter
@@ -123,7 +123,7 @@ def clone_model_url(model, object_id):
 
         <a href="{{model|clone_model_url:object.id}}">clone this object</a>
     """
-    return reverse('modal_helpers:object-clone', args=(model._meta.app_label, model._meta.model_name, object_id))
+    return reverse('modal_forms:object-clone', args=(model._meta.app_label, model._meta.model_name, object_id))
 
 
 @register.simple_tag(takes_context=True)
@@ -211,6 +211,15 @@ class CheckPermNode(template.Node):
 ################################################################################
 # Form rendering helpers
 
+@register.filter()
+def boostrap_field_class(field):
+    text = "class=form-control"
+    if field.errors:
+        text += " is-invalid"
+    elif field.form.is_bound:
+        text += " is-valid"
+    return text
+
 # Adapted from:
 # https://blog.joeymasip.com/how-to-add-attributes-to-form-widgets-in-django-templates/
 @register.filter(name='add_field_attrs')
@@ -273,10 +282,13 @@ def add_field_attrs(field, css):
     return field.as_widget(attrs=attrs)
 
 @register.inclusion_tag('modal_forms/render_form_field.html')
-def render_form_field(field, flavor=None, extra_attrs=''):
+def render_form_field(field, flavor=None, extra_attrs='', layout='vertical'):
 
     # Example:
     #   {'class': 'user-position', 'style': 'border: 1px solid red;'} --> 'class=user-position,style=border: 1px solid red;'
+
+    assert bool(field), "render_form_field(): no field specified"
+
     attrs = field.field.widget.attrs
     field_attrs = ','.join(['='.join([key,str(value)]) for key,value in attrs.items()])
 
@@ -287,11 +299,13 @@ def render_form_field(field, flavor=None, extra_attrs=''):
         'field': field,
         'field_attrs': field_attrs,
         'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,
+        'layout': layout,
     }
 
 @register.inclusion_tag('modal_forms/render_form.html')
-def render_form(form, flavor=None):
+def render_form(form, flavor=None, layout='vertical'):
     return {
         'form': form,
         'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,
+        'layout': layout,
     }
