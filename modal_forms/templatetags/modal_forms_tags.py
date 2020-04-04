@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils import timezone
 from constance import config
 from modal_forms.app_settings import FORM_LAYOUT_FLAVOR
+from modal_forms.app_settings import FORM_LAYOUT_DEFAULT
 
 register = template.Library()
 
@@ -282,7 +283,7 @@ def add_field_attrs(field, css):
     return field.as_widget(attrs=attrs)
 
 @register.inclusion_tag('modal_forms/render_form_field.html')
-def render_form_field(field, flavor=None, extra_attrs='', layout='vertical'):
+def render_form_field(field, flavor=None, extra_attrs='', layout=FORM_LAYOUT_DEFAULT):
 
     # Example:
     #   {'class': 'user-position', 'style': 'border: 1px solid red;'} --> 'class=user-position,style=border: 1px solid red;'
@@ -303,7 +304,7 @@ def render_form_field(field, flavor=None, extra_attrs='', layout='vertical'):
     }
 
 @register.inclusion_tag('modal_forms/render_form.html')
-def render_form(form, flavor=None, layout='vertical'):
+def render_form(form, flavor=None, layout=FORM_LAYOUT_DEFAULT):
     return {
         'form': form,
         'FORM_LAYOUT_FLAVOR': flavor if flavor is not None else FORM_LAYOUT_FLAVOR,

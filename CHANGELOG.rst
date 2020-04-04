@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.13
+-------
+* Configurable MODAL_FORMS_FORM_LAYOUT_DEFAULT
+
 v0.0.12
 -------
 * Support for model forms in a Dialog (undocumented)
