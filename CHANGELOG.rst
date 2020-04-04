@@ -3,6 +3,10 @@
 History
 =======
 
+v0.0.14
+-------
+* Fixes for Django 3; support both int and uuid PKs
+
 v0.0.13
 -------
 * Configurable MODAL_FORMS_FORM_LAYOUT_DEFAULT
